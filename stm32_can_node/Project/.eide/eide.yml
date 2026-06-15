@@ -1,0 +1,315 @@
+version: "4.1"
+name: stm32_can_node
+type: ARM
+deviceName: null
+packDir: null
+srcDirs: []
+virtualFolder:
+  name: <virtual_root>
+  files: []
+  folders:
+    - name: MDK-ARM
+      files:
+        - path: MDK-ARM/startup_stm32f103xb.s
+      folders: []
+    - name: Core
+      files:
+        - path: Core/Src/sys.c
+        - path: Core/Src/main.c
+        - path: Core/Src/init.c
+        - path: Core/Src/gpio.c
+        - path: Core/Src/tim.c
+        - path: Core/Src/usart.c
+        - path: Core/Src/stm32f1xx_hal_msp.c
+        - path: Core/Src/stm32f1xx_hal_timebase_tim.c
+        - path: Core/Src/stm32f1xx_it.c
+        - path: Core/Src/can.c
+        - path: Core/Src/delay.c
+        - path: Core/Src/adc.c
+      folders: []
+    - name: Drivers
+      files: []
+      folders:
+        - name: STM32F1xx_HAL_Driver
+          files:
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim_ex.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc_ex.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_dma.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_cortex.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pwr.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash_ex.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_exti.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_uart.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_can.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_adc.c
+            - path: Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_adc_ex.c
+          folders: []
+        - name: CMSIS
+          files:
+            - path: Core/Src/system_stm32f1xx.c
+          folders: []
+        - name: BSP
+          files:
+            - path: Drivers/BSP/Src/adc_drv.c
+            - path: Drivers/BSP/Src/buzzer_drv.c
+            - path: Drivers/BSP/Src/can_drv.c
+            - path: Drivers/BSP/Src/dht11_drv.c
+            - path: Drivers/BSP/Src/key_drv.c
+            - path: Drivers/BSP/Src/led_drv.c
+            - path: Drivers/BSP/Src/motor_drv.c
+            - path: Drivers/BSP/Src/oled_i2c_drv.c
+            - path: Drivers/BSP/Src/servo_drv.c
+            - path: Drivers/BSP/Src/ultrasonic_drv.c
+          folders: []
+    - name: FreeRTOS
+      files:
+        - path: FreeRTOS/include/FreeRTOSConfig.h
+      folders:
+        - name: portable
+          files:
+            - path: FreeRTOS/portable/MemMang/heap_4.c
+            - path: FreeRTOS/portable/RVDS/ARM_CM3/port.c
+          folders: []
+        - name: source
+          files:
+            - path: FreeRTOS/source/croutine.c
+            - path: FreeRTOS/source/event_groups.c
+            - path: FreeRTOS/source/list.c
+            - path: FreeRTOS/source/queue.c
+            - path: FreeRTOS/source/stream_buffer.c
+            - path: FreeRTOS/source/tasks.c
+            - path: FreeRTOS/source/timers.c
+          folders: []
+    - name: Middleware
+      files:
+        - path: Middleware/Src/debug.c
+        - path: Middleware/Src/MyI2C.c
+      folders: []
+    - name: Tasks
+      files:
+        - path: Tasks/Src/display_task.c
+        - path: Tasks/Src/adc_task.c
+        - path: Tasks/Src/can_task.c
+        - path: Tasks/Src/key_task.c
+        - path: Tasks/Src/humiture_task.c
+        - path: Tasks/Src/ultrasonic_task.c
+        - path: Tasks/Src/monitor_task.c
+        - path: Tasks/Src/actuator_task.c
+      folders: []
+    - name: Config
+      files:
+        - path: Config/config.h
+      folders: []
+dependenceList: []
+outDir: build
+miscInfo:
+  uid: b840d33b5ebccc7a1b407eb7674ec2c0
+targets:
+  stm32_can_node:
+    cppPreprocessAttrs:
+      defineList:
+        - USE_HAL_DRIVER
+        - STM32F103xB
+      incList:
+        - Core/Inc
+        - Drivers/STM32F1xx_HAL_Driver/Inc
+        - Drivers/STM32F1xx_HAL_Driver/Inc/Legacy
+        - Drivers/CMSIS/Device/ST/STM32F1xx/Include
+        - Drivers/CMSIS/Include
+        - Drivers/BSP/Inc
+        - FreeRTOS/include
+        - FreeRTOS/portable/RVDS/ARM_CM3
+        - Middleware/Inc
+        - Tasks/Inc
+        - App/Inc
+        - Config
+        - .cmsis/include
+        - MDK-ARM/RTE/_stm32_can_node
+      libList: []
+    excludeList:
+      - <virtual_root>/Drivers/BSP/Buzzer.c
+      - <virtual_root>/Drivers/BSP/DHT11.c
+      - <virtual_root>/Drivers/BSP/Key.c
+      - <virtual_root>/Drivers/BSP/LED.c
+      - <virtual_root>/Drivers/BSP/Motor.c
+      - <virtual_root>/Drivers/BSP/OLED_I2C.c
+      - <virtual_root>/Drivers/BSP/Servo.c
+      - <virtual_root>/Drivers/BSP/Ultrasonic.c
+    settings:
+      debugger: cortex-debug
+    toolchain: AC6
+    toolchainConfigMap:
+      AC5:
+        archExtensions: ""
+        cpuType: Cortex-M3
+        floatingPointHardware: none
+        options: ""
+        scatterFilePath: <YOUR_SCATTER_FILE>.sct
+        storageLayout:
+          RAM:
+            - id: 1
+              isChecked: true
+              mem:
+                size: "0x5000"
+                startAddr: "0x20000000"
+              noInit: false
+              tag: IRAM
+          ROM:
+            - id: 1
+              isChecked: true
+              isStartup: true
+              mem:
+                size: "0x10000"
+                startAddr: "0x08000000"
+              tag: IROM
+        useCustomScatterFile: false
+      AC6:
+        archExtensions: ""
+        cpuType: Cortex-M3
+        floatingPointHardware: none
+        options:
+          version: 3
+          afterBuildTasks: []
+          asm-compiler:
+            $use: asm-auto
+            defines: []
+            misc-controls: ""
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            language-c: c99
+            language-cpp: c++11
+            link-time-optimization: false
+            one-elf-section-per-function: true
+            optimization: level-0
+            short-enums#wchar: true
+            warnings: ac5-like-warnings
+          global:
+            output-debug-info: enable
+            use-microLIB: true
+          linker:
+            $outputTaskExcludes:
+              - .bin
+            misc-controls: --diag_suppress=L6329
+            output-format: elf
+            ro-base: ""
+            rw-base: ""
+            xo-base: ""
+        scatterFilePath: ""
+        storageLayout:
+          RAM:
+            - id: 1
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 2
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 3
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: RAM
+            - id: 1
+              isChecked: true
+              mem:
+                size: "0x5000"
+                startAddr: "0x20000000"
+              noInit: false
+              tag: IRAM
+            - id: 2
+              isChecked: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              noInit: false
+              tag: IRAM
+          ROM:
+            - id: 1
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 2
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 3
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: ROM
+            - id: 1
+              isChecked: true
+              isStartup: true
+              mem:
+                size: "0x10000"
+                startAddr: "0x8000000"
+              tag: IROM
+            - id: 2
+              isChecked: false
+              isStartup: false
+              mem:
+                size: "0x0"
+                startAddr: "0x0"
+              tag: IROM
+        useCustomScatterFile: false
+    uploadConfigMap:
+      Custom:
+        bin: ""
+        commandLine: ""
+        eraseChipCommand: ""
+      JLink:
+        baseAddr: ""
+        bin: ""
+        cpuInfo:
+          cpuName: "null"
+          vendor: "null"
+        otherCmds: ""
+        proType: 1
+        speed: 8000
+      OpenOCD:
+        baseAddr: "0x08000000"
+        bin: ""
+        interface: stlink
+        target: stm32f1x
+      STLink:
+        address: "0x8000000"
+        bin: ""
+        elFile: None
+        optionBytes: .eide/stm32_can_node.st.option.bytes.ini
+        otherCmds: ""
+        proType: SWD
+        resetMode: default
+        runAfterProgram: true
+        speed: 4000
+      probe-rs:
+        allowEraseAll: false
+        baseAddr: "0x08000000"
+        bin: ${ExecutableName}.axf
+        otherOptions: ""
+        protocol: swd
+        speed: 10000
+        target: STM32F103C8
+    uploader: probe-rs

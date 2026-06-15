@@ -1,0 +1,44 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "USER: 运行",
+			"command": "if [[ '${command:cmake.buildDirectory}' == *'arm'* ]]; then ${workspaceFolder}/tools/deploy.sh; else ${command:cmake.launchTargetPath} --fast; fi",
+			"dependsOn": [
+				"CMake: 生成"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"type": "cmake",
+			"label": "CMake: 清理重新生成",
+			"command": "cleanRebuild",
+			"targets": [
+				"all"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"type": "cmake",
+			"label": "CMake: 生成",
+			"command": "build",
+			"targets": [
+				"vehicle-terminal"
+			],
+			"preset": "__defaultBuildPreset__",
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "CMake 模板 生成 任务"
+		}
+	]
+}

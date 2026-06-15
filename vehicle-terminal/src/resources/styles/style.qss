@@ -1,0 +1,64 @@
+QWidget:focus {
+    outline: none;
+}
+
+QMainWindow {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #f6f7f9, stop:1 #e2e4e8);
+}
+
+/*------------------------- HomePage样式 -------------------------*/
+
+HomePage #frame_weather, HomePage #frame_panel, HomePage #frame_homeMusic {
+    border-radius: 16px;
+    border: 1px solid #aaa;
+	background-color: #f5f7fa;
+}
+
+/*------------------------- ToolsPage样式 -------------------------*/
+
+ToolsPage #frame_LEDControl, ToolsPage #frame_buzzerControl, ToolsPage #frame_keyDetect {
+    border-radius: 16px;
+    border: 1px solid #aaa;
+	background-color: #f5f7fa;
+}
+
+/*------------------------- SettingsPage样式 -------------------------*/
+
+SettingsPage, SettingsPage > QWidget {
+    background: transparent;
+}
+
+QScrollArea, QScrollArea > QWidget, QScrollArea > QWidget > QWidget {
+    background: transparent;
+    border: none;
+}
+
+#settingGroup {
+    background-color: #f5f7fa;
+    border: none;
+    border-radius: 16px;
+    margin: 8px 16px;
+}
+
+#groupTitle {
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 12px 16px 4px;
+}
+
+#settingRow {
+    border-bottom: 1px solid #e5e7eb;
+}
+#settingRow[lastRow="true"] {
+    border-bottom: none;
+}
+#settingLabel {
+    color: #111827;
+    font-size: 16px;
+}
+#settingValue {
+    color: #6b7280;
+    font-size: 14px;
+}

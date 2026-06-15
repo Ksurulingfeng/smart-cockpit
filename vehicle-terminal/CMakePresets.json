@@ -1,0 +1,53 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}"
+        },
+        {
+            "name": "arm",
+            "hidden": true,
+            "inherits": "base",
+            "toolchainFile": "${sourceDir}/tools/toolchain.cmake"
+        },
+        {
+            "name": "arm-debug",
+            "displayName": "ARM GCC (Debug)",
+            "description": "交叉编译到ARM平台",
+            "inherits": "arm",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "arm-release",
+            "displayName": "ARM GCC (Release)",
+            "description": "交叉编译到ARM平台",
+            "inherits": "arm",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "x86-debug",
+            "displayName": "x86 GCC (Debug)",
+            "description": "本地编译",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "x86-release",
+            "displayName": "x86 GCC (Release)",
+            "description": "本地编译",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ]
+}
