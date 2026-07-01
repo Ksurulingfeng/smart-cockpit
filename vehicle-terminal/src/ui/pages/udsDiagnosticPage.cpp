@@ -14,27 +14,22 @@
 #include <QDebug>
 #include <QScrollBar>
 
-// UDS 服务列表
+// UDS 服务列表（仅 STM32 支持的服务）
 static const struct { uint8_t sid; const char *name; } UDS_SERVICES[] = {
     { 0x10, "0x10 诊断会话控制" },
     { 0x22, "0x22 按ID读数据"    },
-    { 0x19, "0x19 读DTC信息"     },
-    { 0x14, "0x14 清除DTC"       },
     { 0x11, "0x11 ECU复位"       },
     { 0x3E, "0x3E 诊断会话保持"   },
 };
 
 static const struct { uint16_t did; const char *name; } DID_LIST[] = {
-    { 0xF100, "0xF100 ECU序列号"      },
-    { 0xF190, "0xF190 VIN码"           },
-    { 0xF1A0, "0xF1A0 软件版本"        },
-    { 0xF1B0, "0xF1B0 总线负载"        },
-    { 0xF1B1, "0xF1B1 NodeA TEC"       },
-    { 0xF1B2, "0xF1B2 NodeA REC"       },
-    { 0xF1B3, "0xF1B3 NodeA TX计数"    },
-    { 0xF1C1, "0xF1C1 NodeB TEC"       },
-    { 0xF1C2, "0xF1C2 NodeB REC"       },
-    { 0xF1C3, "0xF1C3 NodeB TX计数"    },
+    { 0xF100, "0xF100 ECU序列号"   },
+    { 0xF190, "0xF190 VIN码"        },
+    { 0xF1A0, "0xF1A0 软件版本"     },
+    { 0xF1B0, "0xF1B0 总线负载"     },
+    { 0xF1B1, "0xF1B1 TEC"          },
+    { 0xF1B2, "0xF1B2 REC"          },
+    { 0xF1B3, "0xF1B3 TX计数"       },
 };
 
 static const char *sessionName(uint8_t s) {
@@ -166,12 +161,6 @@ QByteArray UdsDiagnosticPage::buildRequest() const
         req.append((char)(did & 0xFF));
         break;
     }
-    case 0x19:
-        req.append((char)0x02); // reportDTCByStatusMask
-        req.append((char)0xFF);
-        break;
-    case 0x14:
-        break;
     case 0x11:
         req.append((char)0x01); // 硬复位
         break;
@@ -234,8 +223,7 @@ QString UdsDiagnosticPage::parseUdsResponse(const QByteArray &data) const
         QByteArray val = data.mid(3);
 
         // 数值型 DID → 解析为整数
-        if (did == 0xF1B0 || did == 0xF1B1 || did == 0xF1B2 || did == 0xF1B3
-            || did == 0xF1C1 || did == 0xF1C2 || did == 0xF1C3) {
+        if (did == 0xF1B0 || did == 0xF1B1 || did == 0xF1B2 || did == 0xF1B3) {
             uint16_t num = 0;
             if (val.size() >= 2)
                 num = (uint8_t)val[0] | ((uint8_t)val[1] << 8);
@@ -288,11 +276,9 @@ void UdsDiagnosticPage::onTesterPresent()
 
 void UdsDiagnosticPage::onClearDtcs()
 {
-    QByteArray req;
-    req.append((char)0x14);
-    sendUdsRequest(req);
     Dem::instance()->clearAllDtcs();
-    appendLog("DTC 已清除", "green");
+    onRefreshDtcs();
+    appendLog("DTC 已清除（本地 DEM）", "green");
 }
 
 void UdsDiagnosticPage::onRefreshDtcs()

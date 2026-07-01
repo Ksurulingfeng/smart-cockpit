@@ -128,7 +128,7 @@
            <enum>Qt::NoFocus</enum>
           </property>
           <property name="text">
-           <string>0x14 清除DTC</string>
+           <string>清除DTC（本地）</string>
           </property>
          </widget>
         </item>
