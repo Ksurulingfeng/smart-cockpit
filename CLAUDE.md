@@ -45,13 +45,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │  ┌─────────┐                    ┌─────────┐             │
 │  │ 节点 A   │ ←── CAN Bus ──→  │ 节点 B   │             │
 │  │ 动力域   │                    │ 车身域   │             │
-│  │ 0x1xx    │                    │ 0x2xx    │             │
+│  │ 发 0x180 │                    │ 发 0x200 │             │
+│  │ 收 0x080 │                    │ 收 0x100 │             │
+│  │ +0x7E0  │                    │ +0x7E0  │             │
 │  └─────────┘                    └─────────┘             │
 └─────────────────────────────────────────────────────────┘
 ```
 
 - **vehicle-terminal** 是主控端，运行在 ARM Linux 车机上，通过 `CanManager` 经 SocketCAN 或 USB-CAN 与 **stm32_can_node** 通信
-- **stm32_can_node** 通过 `#ifdef NODE_A` / `#ifdef NODE_B` 编译为两套固件，在两块 STM32F103 板子上运行，模拟动力域（转速、油量、档位、超声波）和车身域（温湿度、风扇、车窗）
+- **stm32_can_node** 通过 `#ifdef NODE_A` / `#ifdef NODE_B` 编译为两套固件，在两块 STM32F103 板子上运行，模拟动力域（转速、油量、档位、超声波）和车身域（温湿度、风扇、车窗）。均支持 UDS 诊断协议（0x7E0/0x7E8，ISO 14229-1）
 - CAN 协议以 [tools/can_signals.json](tools/can_signals.json) 为单一数据源，运行 `python tools/dbc_generate_header.py` 自动生成 [shared/can_protocol_common.h](shared/can_protocol_common.h) 和 DBC 文件，双方共享
 
 ## 跨项目开发流程

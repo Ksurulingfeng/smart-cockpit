@@ -3,6 +3,7 @@
 #include "task_config.h"
 #include "can_drv.h"
 #include "can_protocol.h"
+#include "uds_handler.h"
 #include "debug.h"
 #include <string.h>
 
@@ -103,6 +104,9 @@ static void process_rx_command(uint32_t id, uint8_t *data, uint8_t len)
     Com_ReceiveFrame(id, data, len);
     uint8_t val;
     switch (id) {
+        case 0x7E0:
+            Uds_HandleRequest(data, len);
+            break;
         case CAN_ID_A_BUZZER_CTRL:
             val = (uint8_t)Com_ReceiveSignal(SID_A_BUZZER_MODE);
             xQueueSend(xBuzzerQueue, &val, pdMS_TO_TICKS(5));
@@ -159,6 +163,9 @@ static void process_rx_command(uint32_t id, uint8_t *data, uint8_t len)
     Com_ReceiveFrame(id, data, len);
     uint8_t val;
     switch (id) {
+        case 0x7E0:
+            Uds_HandleRequest(data, len);
+            break;
         case CAN_ID_B_FAN_TARGET_SPEED:
             val = (uint8_t)Com_ReceiveSignal(SID_B_FAN_TARGET);
             xQueueSend(xFanQueue, &val, pdMS_TO_TICKS(5));
@@ -195,6 +202,8 @@ void vCanTask(void *pvParameters)
 #elif defined(NODE_B)
         send_node_b_data();
 #endif
+
+        Uds_CheckS3Timeout();
 
         CanRxMsg_t rx_msg;
         while (xQueueReceive(xCanRxQueue, &rx_msg, 0) == pdTRUE) {

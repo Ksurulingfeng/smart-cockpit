@@ -1,5 +1,5 @@
 // Auto-generated from tools/can_signals.json
-// 2026-06-30 16:23:44
+// 2026-07-01 20:31:38
 //
 // ID scheme: bit[10:8]=node  bit[7]=dir(0=ctrl)  bit[6:0]=signal
 //   Master→A ctrl: 0x080-0x0FF  (highest priority)

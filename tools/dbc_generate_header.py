@@ -178,12 +178,105 @@ def gen_dbc(config):
         f.write('\n'.join(lines) + '\n')
     print(f'  {path}')
 
+def gen_signal_defs(config):
+    msgs = config['messages']
+    lines = [
+        '/**',
+        ' * COM 层信号定义 — 从 tools/can_signals.json 自动生成',
+        ' * 所有信号名和参数与 DBC 一致。',
+        ' * SWC 通过 Com_SendSignal(SID_xxx, value) 发送,',
+        ' *        通过 Com_ReceiveSignal(SID_xxx) 接收。',
+        ' * 不直接操作 CAN 帧。',
+        ' */',
+        '',
+        '#ifndef COM_SIGNAL_DEFS_H',
+        '#define COM_SIGNAL_DEFS_H',
+        '',
+        '#include "can_protocol_common.h"',
+        '',
+        '#ifdef __cplusplus',
+        'extern "C" {',
+        '#endif',
+        '',
+        '/* ==================== 信号 ID 枚举 ==================== */',
+        '',
+        'typedef enum {',
+    ]
+
+    # 收集所有信号 (跳过 Diagnostic，它不通过 COM 层收发)
+    all_signals = []
+    for m in msgs:
+        if m['name'] == 'Diagnostic':
+            continue
+        for s in m['signals']:
+            all_signals.append((m['id'], m['name'], s))
+
+    for i, (cid, mname, sig) in enumerate(all_signals):
+        comment = f'// 0x{cid:03X} {sig["name"]}'
+        if i < len(all_signals) - 1:
+            lines.append(f'    {sig["sid"]}, {comment:<40}')
+        else:
+            lines.append(f'    {sig["sid"]}, {comment:<40}')
+
+    lines += [
+        '',
+        '    SID_COUNT',
+        '} SignalId_t;',
+        '',
+        '/* ==================== 信号描述符 ==================== */',
+        '',
+        'typedef struct {',
+        '    SignalId_t  id;',
+        '    uint32_t    can_id;',
+        '    uint8_t     byte_offset;',
+        '    uint8_t     bit_length;',
+        '    uint8_t     is_signed;',
+        '    uint8_t     has_flags;',
+        '} SignalDesc_t;',
+        '',
+        f'static const SignalDesc_t g_signal_desc[SID_COUNT] = {{',
+    ]
+
+    for i, (cid, mname, sig) in enumerate(all_signals):
+        byte_off = sig['start'] // 8
+        has_flags = 1 if sig['name'] == 'Flags' else 0
+        signed = 1 if sig['signed'] else 0
+        lines.append(
+            f'    {{ {sig["sid"]}, 0x{cid:03X}, {byte_off}, {sig["length"]}, {signed}, {has_flags} }},'
+        )
+
+    lines += [
+        '};',
+        '',
+        '/* COM 层接口 */',
+        'void Com_Init(void);',
+        'int  Com_SendSignal(SignalId_t id, uint32_t value);',
+        'int  Com_SendFlags(SignalId_t flags_id, uint8_t valid, uint8_t counter);',
+        'int  Com_Flush(void);',
+        'int  Com_SendRaw(uint32_t can_id, const uint8_t *data, uint8_t dlc);',
+        'uint16_t Com_GetTxCount(void);',
+        'void     Com_ReceiveFrame(uint32_t can_id, const uint8_t *data, uint8_t dlc);',
+        'uint32_t Com_ReceiveSignal(SignalId_t id);',
+        '#ifdef __cplusplus',
+        '}',
+        '#endif',
+        '',
+        '#endif /* COM_SIGNAL_DEFS_H */',
+    ]
+
+    path = os.path.join(PROJECT_ROOT, 'shared', 'com_signal_defs.h')
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write('\n'.join(lines) + '\n')
+    print(f'  {path}')
+
+
 def main():
     config = load_json()
     print(f'Reading {JSON_PATH} ({len(config["messages"])} messages)')
     print('Generating:')
     gen_common_header(config)
     gen_dbc(config)
+    gen_signal_defs(config)
     print('Done.')
 
 if __name__ == '__main__':

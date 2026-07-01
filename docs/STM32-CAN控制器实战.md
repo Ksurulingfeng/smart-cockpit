@@ -104,7 +104,19 @@ filter.FilterMaskIdHigh = (0x7FC << 5);   // bit[1:0] 不关心
 
 ISR 不再被无关帧唤醒，CPU 开销显著降低。
 
-### 3.4 AutoRetransmission
+### 3.4 UDS 诊断滤波器
+
+本系统额外添加了第二个滤波器组（FilterBank=1），精确匹配 UDS 诊断请求帧 0x7E0：
+
+```c
+uds_filter.FilterBank           = 1;
+uds_filter.FilterIdHigh         = (0x7E0 << 5);
+uds_filter.FilterMaskIdHigh     = (0x7FF << 5);  // 掩码全 1 → 精确匹配 0x7E0
+```
+
+两个滤波器组（控制帧 + UDS）并行工作，STM32F103 的 14 个滤波器组绰绰有余。
+
+### 3.5 AutoRetransmission
 
 ```c
 hcan.Init.AutoRetransmission = ENABLE;

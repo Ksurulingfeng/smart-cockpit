@@ -77,12 +77,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 TIM3_CH2（PB5）输入捕获测量HC-SR04回波脉宽。[Core/Src/stm32f1xx_it.c](Core/Src/stm32f1xx_it.c) 中的TIM3 ISR调用 `vTaskNotifyGiveFromISR` 唤醒超声波任务，然后读取距离值。
 
-### CAN协议（[Tasks/Inc/can_protocol.h](Tasks/Inc/can_protocol.h)）
+### CAN协议（[shared/can_protocol_common.h](../../shared/can_protocol_common.h)）
 
-CAN1工作在250 kbps（APB1=36 MHz，预分频=9，BS1=12TQ，BS2=3TQ，采样点 81.25%）。滤波器接受所有ID。通过 `#ifdef NODE_A` / `#ifdef NODE_B` 控制节点行为。
+CAN1 工作在 250 kbps（APB1=36 MHz，预分频=9，BS1=12TQ，BS2=3TQ，采样点 81.25%）。使用两个硬件滤波器组：FilterBank=0 过滤节点控制帧，FilterBank=1 过滤 UDS 请求（0x7E0）。通过 `#ifdef NODE_A` / `#ifdef NODE_B` 控制节点行为。
 
-- **节点A** 发送：状态（0x100）、超声波距离（0x101）、档位（0x102）、油量（0x103）、转速（0x104）。接收：蜂鸣器（0x180）、LED（0x181）。
-- **节点B** 发送：状态（0x200）、温度（0x201）、湿度（0x202）、风扇转速（0x203）、车窗位置（0x204）。接收：风扇目标转速（0x280）、车窗目标位置（0x281）、蜂鸣器（0x282）、LED（0x283）。
+- **节点A**（动力域）：发送 0x180-0x183（超声波/档位/油量/转速），接收 0x080-0x081（蜂鸣器/LED 控制）+ 0x7E0（UDS 请求）
+- **节点B**（车身域）：发送 0x200-0x203（温湿度/风扇反馈/车窗反馈），接收 0x100-0x103（风扇/车窗/蜂鸣/LED 控制）+ 0x7E0（UDS 请求）
+- **UDS 诊断**：支持 0x10/0x22/0x3E/0x11 四种 UDS 服务，在 0x7E8 回复，含 S3(5s) 超时自动切回默认会话
 
 ### 关键抽象层
 

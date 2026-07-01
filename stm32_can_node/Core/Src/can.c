@@ -79,6 +79,22 @@ void MX_CAN_Init(void)
         Error_Handler();
     }
 
+    // UDS 滤波器: 精确匹配 0x7E0 (诊断请求)
+    CAN_FilterTypeDef uds_filter = {0};
+    uds_filter.FilterBank           = 1;
+    uds_filter.FilterMode           = CAN_FILTERMODE_IDMASK;
+    uds_filter.FilterScale          = CAN_FILTERSCALE_32BIT;
+    uds_filter.FilterIdHigh         = (0x7E0 << 5);
+    uds_filter.FilterIdLow          = 0x0000;
+    uds_filter.FilterMaskIdHigh     = (0x7FF << 5);
+    uds_filter.FilterMaskIdLow      = 0x0000;
+    uds_filter.FilterFIFOAssignment = CAN_RX_FIFO0;
+    uds_filter.FilterActivation     = ENABLE;
+    uds_filter.SlaveStartFilterBank = 14;
+    if (HAL_CAN_ConfigFilter(&hcan, &uds_filter) != HAL_OK) {
+        Error_Handler();
+    }
+
     HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
     HAL_CAN_ActivateNotification(&hcan, CAN_IT_ERROR);
   /* USER CODE END CAN_Init 2 */

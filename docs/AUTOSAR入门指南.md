@@ -182,7 +182,7 @@ AUTOSAR 定义了 4 种 E2E Profile，安全性递增：
 | DBC 配置 | `smart_cockpit.dbc` (自动生成) |
 | E2E Profile 1 | flags 字节 (counter + valid) |
 | NvM (非易失存储) | `ConfigManager` (QSettings) |
-| Diagnostic Stack | `CAN_ID_DIAGNOSTIC` (TEC/REC 上报) |
+| Diagnostic Stack | `CAN_ID_DIAGNOSTIC` (TEC/REC 上报) + UDS (0x7E0/0x7E8, ISO 14229-1) |
 
 **你不是在用 AUTOSAR——但你已经实现了其中一个微型子集**。面试时这样表述比"我用了 AUTOSAR"更准确、更有说服力。
 

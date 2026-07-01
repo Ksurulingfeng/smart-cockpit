@@ -53,6 +53,7 @@ ID 分配方案：`bit[10:8]=node, bit[7]=dir(0=control优先), bit[6:0]=signal`
 | 0x180-0x1FF | 中 | 节点A→主控 上报 |
 | 0x200-0x27F | 低 | 节点B→主控 上报 |
 | 0x300-0x37F | 最低 | 诊断帧(10s周期) |
+| 0x7E0/0x7E8 | — | UDS 诊断请求/响应 (ISO 14229-1) |
 
 ## 硬件
 
@@ -183,6 +184,7 @@ Driver   canmanager.cpp (SocketCAN) / can_drv.c (HAL)   ← 硬件抽象
 **入门**：
 - [CAN 总线入门指南](docs/CAN总线入门指南.md) — 零基础到理解本项目 CAN 设计
 - [AUTOSAR 入门指南](docs/AUTOSAR入门指南.md) — AUTOSAR 架构 + 本项目对照
+- [UDS 诊断协议入门](docs/UDS诊断协议入门.md) — ISO 14229-1 + STM32 端实现
 
 **技术深入**：
 - [FreeRTOS 实时操作系统实践](docs/FreeRTOS实时操作系统实践.md) — 7 任务架构 + ISR 通信模式
