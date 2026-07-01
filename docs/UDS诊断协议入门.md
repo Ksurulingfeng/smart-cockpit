@@ -185,16 +185,125 @@ ECU → 诊断仪:   0x7E8  (物理响应)
 
 ---
 
-## 六、面试话术
+## 六、实操指南
+
+### 6.1 你需要什么
+
+- STM32 已经烧录并连上 CAN 总线
+- 一台 Linux 电脑（或虚拟机），安装 `can-utils`：
+
+```bash
+sudo apt install can-utils
+```
+
+### 6.2 创建虚拟 CAN 接口
+
+如果你用 x86 电脑开发（没有真实 CAN 硬件），创建一条虚拟 CAN 总线：
+
+```bash
+sudo ip link add dev vcan0 type vcan
+sudo ip link set up vcan0
+```
+
+`vcan0` 就是你的"CAN 总线"，可以像真实 CAN 一样收发数据。
+
+### 6.3 先确认 STM32 在说话
+
+```bash
+candump vcan0
+```
+
+如果 STM32 正常工作，屏幕上会不断刷出类似这样的东西：
+
+```
+vcan0  180  [3]  31 96 00     ← 超声波距离
+vcan0  181  [2]  11 02        ← 档位
+vcan0  200  [3]  21 FF 00     ← 温度
+```
+
+这说明 CAN 通信正常。
+
+### 6.4 向 STM32 发第一条 UDS 命令
+
+开两个终端窗口。
+
+**窗口 1 — 监听回复**：
+
+```bash
+candump vcan0,7E8:FFFFFFFF
+```
+
+这行命令的意思是："只看 CAN ID 为 `7E8` 的帧（UDS 回复），其他全忽略"。
+
+**窗口 2 — 发送命令**：
+
+```bash
+cansend vcan0 7E0#22.F1.90
+```
+
+这行命令是什么意思？
+
+```
+cansend vcan0         → 往 vcan0 这条 CAN 总线发数据
+7E0                   → CAN ID，0x7E0 是"诊断请求"
+#                     → 分隔符，后面是数据
+22                    → 第1个字节：22 就是"读数据"这个服务
+F1.90                 → 第2-3个字节：F190 是"车辆识别码(VIN)"这个数据项
+```
+
+发完之后，窗口 1 会显示类似：
+
+```
+vcan0  7E8  [13]  62 F1 90 53 54 4D 33 32 2D 4E 4F 44 45 41
+```
+
+解读：
+```
+7E8         → 这是回复（ECU→诊断仪）
+[13]        → 回复了 13 个字节
+62          → 0x22 + 0x40 = 正响应
+F1 90       → 你问的那个数据项
+53 54 ...   → 剩余是数据：S-T-M-3-2---N-O-D-E-A
+```
+
+### 6.5 试试其他命令
+
+```bash
+# 读 ECU 序列号
+cansend vcan0 7E0#22.F1.00
+
+# 读软件版本
+cansend vcan0 7E0#22.F1.A0
+
+# 读 TEC（CAN 错误计数）
+cansend vcan0 7E0#22.F1.B1
+
+# 让 STM32 复位
+cansend vcan0 7E0#11.01
+```
+
+### 6.6 从车载终端（Qt）发 UDS
+
+如果你的 vehicle-terminal 在运行，在"CAN 调试"页面：
+
+1. CAN ID 填 `7E0`
+2. 数据填 `22 F1 90`
+3. 点发送
+4. 接收区会看到 `7E8` 的回复
+
+---
+
+## 七、面试话术
 
 > "UDS 是 ISO 14229-1 定义的汽车诊断标准协议。我在 STM32 端实现了四个基础 UDS 服务——会话控制(0x10)、按 ID 读数据(0x22)、会话保持(0x3E)和 ECU 复位(0x11)。诊断仪通过 0x7E0 发请求，ECU 在 0x7E8 回复，正响应 SID+0x40，负响应 0x7F+NRC。实现了 S3 超时自动切回默认会话的安全机制。硬件层面新增了一个 CAN 滤波器组精确匹配 0x7E0，与现有控制帧滤波器并行工作。"
 
 ---
 
-## 七、参考资料
+## 八、参考资料
 
 - [ISO 14229-1:2020 — Road vehicles — Unified Diagnostic Services (UDS)](https://www.iso.org/standard/72439.html)
 - [uds_handler.c](../stm32_can_node/Tasks/Src/uds_handler.c) — 本项目 STM32 端实现
 - [uds_handler.h](../stm32_can_node/Tasks/Inc/uds_handler.h)
+- [uds_protocol.h](../shared/uds_protocol.h) — 共享 UDS 常量 (SID/NRC/DID/DTC)
 - [CAN 入门指南](CAN总线入门指南.md)
 - [AUTOSAR 入门指南](AUTOSAR入门指南.md)

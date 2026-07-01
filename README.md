@@ -6,7 +6,7 @@
 
 ```
 smart_cockpit/
-├── shared/                  # 跨项目共享（CAN 协议权威源 + DBC 文件）
+├── shared/                  # 跨项目共享（CAN协议 + COM信号 + UDS诊断 + DBC）
 ├── stm32_can_node/          # CAN 总线仿真固件（FreeRTOS，双节点）
 ├── vehicle-terminal/        # 车载 Linux 终端应用（Qt 5.15）
 └── docs/                    # PCB 设计 + 改造总结文档
@@ -42,7 +42,7 @@ smart_cockpit/
 
 ## CAN 协议
 
-协议以 [tools/can_signals.json](tools/can_signals.json) 为单一数据源，运行 `python tools/dbc_generate_header.py` 自动生成 [can_protocol_common.h](shared/can_protocol_common.h)、[signal_id.h](tools/signal_id.h) 和 [smart_cockpit.dbc](shared/smart_cockpit.dbc)。
+协议以 [tools/can_signals.json](tools/can_signals.json) 为单一数据源，运行 `python tools/dbc_generate_header.py` 自动生成 [shared/](shared/) 下 4 个文件（[说明](shared/README.md)）。
 
 ID 分配方案：`bit[10:8]=node, bit[7]=dir(0=control优先), bit[6:0]=signal`
 
@@ -132,7 +132,7 @@ sudo ip link set up vcan0
 ```bash
 # 编辑 tools/can_signals.json → 运行脚本 → 两端重新编译
 python tools/dbc_generate_header.py
-# 输出: shared/can_protocol_common.h + shared/smart_cockpit.dbc
+# 输出: shared/*.h + shared/smart_cockpit.dbc
 ```
 
 ### Git 协作流程

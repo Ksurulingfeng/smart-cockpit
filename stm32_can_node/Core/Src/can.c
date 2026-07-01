@@ -23,6 +23,7 @@
 /* USER CODE BEGIN 0 */
 #include "task_headfile.h"
 #include "can_drv.h"
+#include "../../../shared/uds_protocol.h"
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan;
@@ -79,14 +80,14 @@ void MX_CAN_Init(void)
         Error_Handler();
     }
 
-    // UDS 滤波器: 精确匹配 0x7E0 (诊断请求)
+    // UDS 滤波器: 精确匹配诊断请求
     CAN_FilterTypeDef uds_filter = {0};
     uds_filter.FilterBank           = 1;
     uds_filter.FilterMode           = CAN_FILTERMODE_IDMASK;
     uds_filter.FilterScale          = CAN_FILTERSCALE_32BIT;
-    uds_filter.FilterIdHigh         = (0x7E0 << 5);
+    uds_filter.FilterIdHigh         = ((uint32_t)CAN_ID_UDS_REQUEST << 5);
     uds_filter.FilterIdLow          = 0x0000;
-    uds_filter.FilterMaskIdHigh     = (0x7FF << 5);
+    uds_filter.FilterMaskIdHigh     = ((uint32_t)(CAN_ID_UDS_REQUEST | 0x7FF) << 5);
     uds_filter.FilterMaskIdLow      = 0x0000;
     uds_filter.FilterFIFOAssignment = CAN_RX_FIFO0;
     uds_filter.FilterActivation     = ENABLE;
@@ -178,19 +179,20 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan)
 {
     if (hcan->Instance != CAN1) return;
-    uint32_t esr = hcan->ErrorCode;
+    uint32_t hal_err = hcan->ErrorCode;
     g_can_tec = (uint16_t)((hcan->Instance->ESR >> 16) & 0xFF);
     g_can_rec = (uint16_t)((hcan->Instance->ESR >> 24) & 0xFF);
 
     if (hcan->Instance->ESR & CAN_ESR_BOFF) {
         g_can_error_state = 3; // busoff
+    } else if (hal_err & (HAL_CAN_ERROR_TIMEOUT | HAL_CAN_ERROR_NOT_INITIALIZED)) {
+        g_can_error_state = 2; // HAL级错误视为 error passive
     } else if (g_can_tec >= 128 || g_can_rec >= 128) {
-        g_can_error_state = 2; // error passive
+        g_can_error_state = 2;
     } else if (g_can_tec >= 96 || g_can_rec >= 96) {
         g_can_error_state = 1; // warning
     } else {
         g_can_error_state = 0;
     }
-    (void)esr;
 }
 /* USER CODE END 1 */

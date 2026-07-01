@@ -8,25 +8,6 @@
 #include "com_stack/dem.h"
 #include <QDebug>
 
-// UDS 服务 ID
-#define UDS_SID_DIAG_SESSION_CONTROL    0x10
-#define UDS_SID_ECU_RESET               0x11
-#define UDS_SID_CLEAR_DTC               0x14
-#define UDS_SID_READ_DTC                0x19
-#define UDS_SID_READ_DATA_BY_ID         0x22
-#define UDS_SID_WRITE_DATA_BY_ID        0x2E
-#define UDS_SID_TESTER_PRESENT          0x3E
-
-// 会话类型
-#define SESSION_DEFAULT       0x01
-#define SESSION_PROGRAMMING   0x02
-#define SESSION_EXTENDED      0x03
-
-// NRC
-#define NRC_SERVICE_NOT_SUPPORTED     0x11
-#define NRC_CONDITIONS_NOT_CORRECT    0x22
-#define NRC_REQUEST_OUT_OF_RANGE      0x31
-
 static constexpr int S3_SERVER_TIMEOUT_MS = 5000;
 
 Dcm *Dcm::instance()
@@ -52,7 +33,7 @@ void Dcm::processUdsMessage(const QByteArray &data)
     uint8_t sid = (uint8_t)data[0];
 
     switch (sid) {
-    case UDS_SID_DIAG_SESSION_CONTROL:  handleDiagSessionControl(data); break;
+    case UDS_SID_DIAG_SESSION_CTRL:  handleDiagSessionControl(data); break;
     case UDS_SID_ECU_RESET:             handleEcuReset(data); break;
     case UDS_SID_CLEAR_DTC:             handleClearDtcInfo(data); break;
     case UDS_SID_READ_DTC:              handleReadDtcInfo(data); break;
@@ -60,7 +41,7 @@ void Dcm::processUdsMessage(const QByteArray &data)
     case UDS_SID_WRITE_DATA_BY_ID:      handleWriteDataByIdentifier(data); break;
     case UDS_SID_TESTER_PRESENT:        handleTesterPresent(data); break;
     default:
-        sendNegativeResponse(sid, NRC_SERVICE_NOT_SUPPORTED);
+        sendNegativeResponse(sid, UDS_NRC_SERVICE_NOT_SUPPORTED);
         break;
     }
 }
@@ -70,21 +51,21 @@ void Dcm::processUdsMessage(const QByteArray &data)
 void Dcm::handleDiagSessionControl(const QByteArray &data)
 {
     if (data.size() < 2) {
-        sendNegativeResponse(UDS_SID_DIAG_SESSION_CONTROL, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_DIAG_SESSION_CTRL, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     }
 
     uint8_t session = (uint8_t)data[1];
     switch (session) {
-    case SESSION_DEFAULT:
+    case UDS_SESSION_DEFAULT:
         m_s3Timer->stop();
         break;
-    case SESSION_PROGRAMMING:
-    case SESSION_EXTENDED:
+    case UDS_SESSION_PROGRAMMING:
+    case UDS_SESSION_EXTENDED:
         m_s3Timer->start(S3_SERVER_TIMEOUT_MS);
         break;
     default:
-        sendNegativeResponse(UDS_SID_DIAG_SESSION_CONTROL, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_DIAG_SESSION_CTRL, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     }
 
@@ -95,15 +76,15 @@ void Dcm::handleDiagSessionControl(const QByteArray &data)
     resp.append((char)50);  // P2_server 低字节 (50ms)
     resp.append((char)0);
     resp.append((char)200); // P2_star (2000ms)
-    sendPositiveResponse(UDS_SID_DIAG_SESSION_CONTROL, resp);
+    sendPositiveResponse(UDS_SID_DIAG_SESSION_CTRL, resp);
     emit sessionChanged(session);
 }
 
 void Dcm::onSessionTimeout()
 {
-    m_currentSession = SESSION_DEFAULT;
+    m_currentSession = UDS_SESSION_DEFAULT;
     qDebug() << "[DCM] S3 timeout, fallback to default session";
-    emit sessionChanged(SESSION_DEFAULT);
+    emit sessionChanged(UDS_SESSION_DEFAULT);
 }
 
 // ==================== 0x11 — ECU 复位 ====================
@@ -111,14 +92,14 @@ void Dcm::onSessionTimeout()
 void Dcm::handleEcuReset(const QByteArray &data)
 {
     if (data.size() < 2) {
-        sendNegativeResponse(UDS_SID_ECU_RESET, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_ECU_RESET, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     }
 
     uint8_t resetType = (uint8_t)data[1];
     if (resetType != 0x01 && resetType != 0x03) {
         // 0x01 = 硬复位, 0x03 = 软复位
-        sendNegativeResponse(UDS_SID_ECU_RESET, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_ECU_RESET, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     }
 
@@ -138,7 +119,7 @@ void Dcm::handleEcuReset(const QByteArray &data)
 void Dcm::handleReadDataByIdentifier(const QByteArray &data)
 {
     if (data.size() < 3) {
-        sendNegativeResponse(UDS_SID_READ_DATA_BY_ID, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_READ_DATA_BY_ID, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     }
 
@@ -160,17 +141,14 @@ void Dcm::handleReadDataByIdentifier(const QByteArray &data)
         // 暂时返回 0，等待 Phase 6 集成
         value.append('\0');
         break;
-    case DID_NODE_A_TEC:
-    case DID_NODE_B_TEC:
-    case DID_NODE_A_REC:
-    case DID_NODE_B_REC:
-    case DID_NODE_A_TX_COUNT:
-    case DID_NODE_B_TX_COUNT:
-        // 诊断帧数据，暂返回 0
+    case DID_TEC:
+    case DID_REC:
+    case DID_TX_COUNT:
+        // 诊断帧数据，暂返回 0 (后续从 Com 缓存读取)
         value.append((char)0).append((char)0);
         break;
     default:
-        sendNegativeResponse(UDS_SID_READ_DATA_BY_ID, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_READ_DATA_BY_ID, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     }
 
@@ -186,24 +164,24 @@ void Dcm::handleReadDataByIdentifier(const QByteArray &data)
 void Dcm::handleWriteDataByIdentifier(const QByteArray &data)
 {
     if (data.size() < 4) {
-        sendNegativeResponse(UDS_SID_WRITE_DATA_BY_ID, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_WRITE_DATA_BY_ID, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     }
 
     uint16_t did = ((uint16_t)(uint8_t)data[1] << 8) | (uint8_t)data[2];
 
     // 仅在编程/扩展会话允许写入
-    if (m_currentSession != SESSION_PROGRAMMING && m_currentSession != SESSION_EXTENDED) {
-        sendNegativeResponse(UDS_SID_WRITE_DATA_BY_ID, NRC_CONDITIONS_NOT_CORRECT);
+    if (m_currentSession != UDS_SESSION_PROGRAMMING && m_currentSession != UDS_SESSION_EXTENDED) {
+        sendNegativeResponse(UDS_SID_WRITE_DATA_BY_ID, UDS_NRC_CONDITIONS_NOT_CORRECT);
         return;
     }
 
     switch (did) {
     case DID_SOFTWARE_VERSION:
-        sendNegativeResponse(UDS_SID_WRITE_DATA_BY_ID, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_WRITE_DATA_BY_ID, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     default:
-        sendNegativeResponse(UDS_SID_WRITE_DATA_BY_ID, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_WRITE_DATA_BY_ID, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     }
 
@@ -219,7 +197,7 @@ void Dcm::handleTesterPresent(const QByteArray &data)
 {
     (void)data;
     // 重置 S3 定时器
-    if (m_currentSession != SESSION_DEFAULT)
+    if (m_currentSession != UDS_SESSION_DEFAULT)
         m_s3Timer->start(S3_SERVER_TIMEOUT_MS);
 
     // 零子功能 = 不需要回复
@@ -236,7 +214,7 @@ void Dcm::handleTesterPresent(const QByteArray &data)
 void Dcm::handleReadDtcInfo(const QByteArray &data)
 {
     if (data.size() < 2) {
-        sendNegativeResponse(UDS_SID_READ_DTC, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_READ_DTC, UDS_NRC_REQUEST_OUT_OF_RANGE);
         return;
     }
 
@@ -274,7 +252,7 @@ void Dcm::handleReadDtcInfo(const QByteArray &data)
         break;
     }
     default:
-        sendNegativeResponse(UDS_SID_READ_DTC, NRC_REQUEST_OUT_OF_RANGE);
+        sendNegativeResponse(UDS_SID_READ_DTC, UDS_NRC_REQUEST_OUT_OF_RANGE);
         break;
     }
 }
@@ -286,8 +264,8 @@ void Dcm::handleClearDtcInfo(const QByteArray &data)
     (void)data;
 
     // 仅在默认/扩展会话允许清除
-    if (m_currentSession != SESSION_DEFAULT && m_currentSession != SESSION_EXTENDED) {
-        sendNegativeResponse(UDS_SID_CLEAR_DTC, NRC_CONDITIONS_NOT_CORRECT);
+    if (m_currentSession != UDS_SESSION_DEFAULT && m_currentSession != UDS_SESSION_EXTENDED) {
+        sendNegativeResponse(UDS_SID_CLEAR_DTC, UDS_NRC_CONDITIONS_NOT_CORRECT);
         return;
     }
 

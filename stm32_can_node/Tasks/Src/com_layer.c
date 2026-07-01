@@ -49,19 +49,24 @@ int Com_SendFlags(SignalId_t flags_id, uint8_t valid, uint8_t counter)
     return Com_SendSignal(flags_id, CAN_MAKE_FLAGS(valid, counter));
 }
 
+// CAN 发送重试: 100次×50μs=5ms, 每10次 yield
+static HAL_StatusTypeDef send_with_retry(uint32_t id, uint8_t *data, uint8_t dlc)
+{
+    HAL_StatusTypeDef ret = CAN_SendMessage(id, data, dlc);
+    for (int retry = 0; retry < 100 && ret != HAL_OK; retry++) {
+        delay_us(50);
+        if ((retry + 1) % 10 == 0) taskYIELD();
+        ret = CAN_SendMessage(id, data, dlc);
+    }
+    return ret;
+}
+
 // 发送当前帧并重置缓冲区
 int Com_Flush(void)
 {
     if (g_tx_dlc == 0) return -1;
-
     g_tx_cnt++;
-    HAL_StatusTypeDef ret = CAN_SendMessage(g_tx_cid, g_tx_buf, g_tx_dlc);
-    for (int retry = 0; retry < 100 && ret != HAL_OK; retry++) {
-        delay_us(50);
-        if ((retry + 1) % 10 == 0) taskYIELD();
-        ret = CAN_SendMessage(g_tx_cid, g_tx_buf, g_tx_dlc);
-    }
-
+    HAL_StatusTypeDef ret = send_with_retry(g_tx_cid, g_tx_buf, g_tx_dlc);
     g_tx_buf[0] = 0;
     g_tx_dlc = 0;
     g_tx_cid = 0xFFFFFFFF;
@@ -74,13 +79,7 @@ uint16_t Com_GetTxCount(void) { return g_tx_cnt; }
 int Com_SendRaw(uint32_t can_id, const uint8_t *data, uint8_t dlc)
 {
     g_tx_cnt++;
-    HAL_StatusTypeDef ret = CAN_SendMessage(can_id, (uint8_t *)data, dlc);
-    for (int retry = 0; retry < 100 && ret != HAL_OK; retry++) {
-        delay_us(50);
-        if ((retry + 1) % 10 == 0) taskYIELD();
-        ret = CAN_SendMessage(can_id, (uint8_t *)data, dlc);
-    }
-    return (ret == HAL_OK) ? 0 : -1;
+    return send_with_retry(can_id, (uint8_t *)data, dlc) == HAL_OK ? 0 : -1;
 }
 
 // 接收帧→存入接收上下文
