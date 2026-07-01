@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include "serialAssistantPage.h"
-#include "canAssistantPage.h"
+#include "udsDiagnosticPage.h"
 #include "gpioTestPage.h"
 
 QT_BEGIN_NAMESPACE
@@ -60,7 +60,7 @@ private:
 
     Ui::ToolsPage *ui;
     SerialAssistantPage *m_serialAssistantPage = nullptr;
-    CanAssistantPage *m_canAssistantPage       = nullptr;
+    UdsDiagnosticPage *m_udsDiagPage = nullptr;
     GpioTestPage *m_gpioTestPage               = nullptr;
 
     int m_fanLevel                             = 0; // 空调风速 0-100

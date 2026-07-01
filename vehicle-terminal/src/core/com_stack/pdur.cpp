@@ -3,18 +3,18 @@
  * @brief   PduR 实现 — CAN 帧路由分发
  *
  * 接收路由:
- *   传感器帧 (0x180-0x27F) → Com::receiveFrame
- *   诊断帧   (0x300-0x37F) → Com::receiveFrame
- *   UDS 帧   (0x7E0-0x7EF) → CanTp::receiveFrame (Phase 3)
+ *   传感器帧   (0x180-0x27F) → Com::receiveFrame
+ *   诊断帧     (0x300-0x37F) → Com::receiveFrame
+ *   UDS 响应帧  (0x7E8-0x7E9) → Dcm::processUdsMessage (裸帧，无 CanTp)
  *
  * 发送路由:
- *   Com::sendFrameRequest    → CanManager::sendFrame
- *   CanTp::sendFrameRequest  → CanManager::sendFrame (Phase 3)
+ *   Com::sendFrameRequest   → CanManager
+ *   Dcm::sendRawFrame       → CanManager
  */
 
 #include "pdur.h"
 #include "com_stack/com.h"
-#include "com_stack/cantp.h"
+#include "com_stack/dcm.h"
 #include "canmanager.h"
 #include "config.h"
 #include <QDebug>
@@ -53,8 +53,8 @@ void PduR::setupRoutes()
                 onSendFrameRequest(canId, data);
             });
 
-    // 发送路由：CanTp → CanManager
-    connect(CanTp::instance(), &CanTp::sendFrameRequest, this,
+    // 发送路由：Dcm → CanManager（裸 UDS 帧）
+    connect(Dcm::instance(), &Dcm::sendRawFrame, this,
             [this](uint32_t canId, const QByteArray &data) {
                 onSendFrameRequest(canId, data);
             });
@@ -76,9 +76,10 @@ void PduR::onCanFrame(uint32_t canId, const uint8_t *data, uint8_t len)
         return;
     }
 
-    // UDS 帧 0x7E0-0x7EF → CanTp
-    if (canId >= 0x7E0 && canId <= 0x7EF) {
-        CanTp::instance()->receiveFrame(canId, data, len);
+    // UDS 响应帧 0x7E8-0x7E9 → Dcm（裸帧，STM32 不经过 CanTp）
+    if (canId == CAN_ID_UDS_RESP_A || canId == CAN_ID_UDS_RESP_B) {
+        QByteArray raw((const char *)data, (int)len);
+        Dcm::instance()->processUdsMessage(raw);
         return;
     }
 }

@@ -280,18 +280,21 @@ candump can0,7E9:FFFFFFFF    # 看 NodeB 回复
 
 ### 6.6 从车载终端（Qt）发 UDS
 
-如果你的 vehicle-terminal 在运行，在"CAN 调试"页面：
+如果你的 vehicle-terminal 在运行，打开 **UDS 诊断** 页面（ToolsPage → "CAN测试"）：
 
-1. CAN ID 填 `7E0`
-2. 数据填 `22 F1 90`
-3. 点发送
-4. 接收区会看到 `7E8` 的回复
+1. 选择目标节点（NodeA 或 NodeB）
+2. 选择 UDS 服务（如 0x22 按ID读数据）
+3. 选择或输入 DID（如 0xF190 = VIN码）
+4. 点击"发送请求"
+5. 响应区会显示解析后的结果（正响应/负响应）
+
+UDS 通信使用裸 CAN 帧（无 CanTp PCI 字节），与 STM32 端 `uds_handler.c` 一致。
 
 ---
 
 ## 七、面试话术
 
-> "UDS 是 ISO 14229-1 定义的汽车诊断标准协议。我在 STM32 端实现了四个基础 UDS 服务——会话控制(0x10)、按 ID 读数据(0x22)、会话保持(0x3E)和 ECU 复位(0x11)。诊断仪通过 0x7E0 发请求，ECU 在 0x7E8 回复，正响应 SID+0x40，负响应 0x7F+NRC。实现了 S3 超时自动切回默认会话的安全机制。硬件层面新增了一个 CAN 滤波器组精确匹配 0x7E0，与现有控制帧滤波器并行工作。"
+> "UDS 是 ISO 14229-1 定义的汽车诊断标准协议。我在 STM32 端实现了六个基础 UDS 服务——会话控制(0x10)、ECU复位(0x11)、清除DTC(0x14)、读DTC(0x19)、按 ID 读数据(0x22)和诊断会话保持(0x3E)。双节点各用独立 CAN ID（NodeA 0x7E0→0x7E8、NodeB 0x7E1→0x7E9）。终端侧按 AUTOSAR 分层架构实现了 DCM 诊断通信管理模块，裸帧直发（无 CanTp PCI 字节，单帧场景够用）。STM32 端新增了一个 CAN 滤波器组精确匹配 UDS 请求 ID，与现有控制帧滤波器并行工作。"
 
 ---
 
@@ -301,5 +304,7 @@ candump can0,7E9:FFFFFFFF    # 看 NodeB 回复
 - [uds_handler.c](../stm32_can_node/Tasks/Src/uds_handler.c) — 本项目 STM32 端实现
 - [uds_handler.h](../stm32_can_node/Tasks/Inc/uds_handler.h)
 - [uds_protocol.h](../shared/uds_protocol.h) — 共享 UDS 常量 (SID/NRC/DID/DTC)
+- [dcm.cpp](../vehicle-terminal/src/core/com_stack/dcm.cpp) — Qt 端 DCM (UDS 服务处理)
+- [udsDiagnosticPage.cpp](../vehicle-terminal/src/ui/pages/udsDiagnosticPage.cpp) — Qt 端 UDS 诊断页
 - [CAN 入门指南](CAN总线入门指南.md)
 - [AUTOSAR 入门指南](AUTOSAR入门指南.md)

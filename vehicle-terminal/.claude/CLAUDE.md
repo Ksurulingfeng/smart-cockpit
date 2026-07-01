@@ -40,7 +40,30 @@ LANG=zh_CN.UTF-8 cmake --build build/x86-release --target test_ec20manager
 ## 架构概览
 
 ### 单例管理器
-`core/` 下所有类（`VolumeManager`、`ConfigManager`、`WifiManager`、`WeatherManager`、`Rte`、`ComLayer`、`CanManager`、`EC20Manager`）均使用 Meyer's 单例。`MapManager` 不是单例，由使用方按需创建。
+`core/` 下所有类（`VolumeManager`、`ConfigManager`、`WifiManager`、`WeatherManager`、`Rte`、`CanManager`、`EC20Manager`）均使用 Meyer's 单例。`MapManager` 不是单例，由使用方按需创建。
+
+### AUTOSAR COM Stack (core/com_stack/)
+CAN 通信分层架构，按 AUTOSAR 模式设计：
+
+| 模块 | 文件 | 职责 |
+|------|------|------|
+| **Com** | com_stack/com.{h,cpp} | QObject单例，E2E校验(valid+counter)，统一信号解包→emit signalUpdated |
+| **PduR** | com_stack/pdur.{h,cpp} | CAN帧按ID范围路由：传感器帧→Com，诊断帧→Com，UDS响应→Dcm |
+| **DCM** | com_stack/dcm.{h,cpp} | UDS诊断服务处理(0x10/0x11/0x22/0x19/0x14/0x3E)，裸帧直发 |
+| **DEM** | com_stack/dem.{h,cpp} | DTC故障管理，存储/上报/清除/MIL |
+| **NvM** | com_stack/nvm.{h,cpp} | ConfigManager薄封装，DEM持久化DTC |
+| **CanTp** | com_stack/cantp.{h,cpp} | ISO 15765-2多帧传输(预留，当前UDS用裸帧) |
+
+数据流：
+```
+接收: CanManager::frameReceived → PduR(路由)
+        ├→ 0x180-0x27F → Com(E2E+解包) → emit signalUpdated → Rte(纯路由) → UI
+        ├→ 0x300       → Com → emit diagnosticDataReceived
+        └→ 0x7E8/0x7E9 → Dcm(裸UDS响应)
+
+发送: UI → Com::sendSignal → sendFrameRequest → PduR → CanManager
+      UI → Dcm::sendUdsRequest → sendRawFrame → PduR → CanManager (裸帧,无CanTp PCI)
+```
 
 ### 主窗口页面切换
 `MainWindow::setupPages()` 中一个 `QStackedWidget` 管理所有页面。`HomePage` 和 `MusicPage` 在构造时创建，`ToolsPage`、`NavigationPage`、`SettingsPage` 首次点击对应按钮时才懒加载。
@@ -113,6 +136,16 @@ private:
 - **析构函数**：所有 `QObject` 子类析构加 `override`，空体直接 `= default`
 - **成员初始化**：in-class 默认值优先，避免初始器列表冗余
 - **格式化**：使用 `/home/hajimi/tools/.clang-format`（BasedOnStyle: Microsoft, 4空格, Linux大括号, 等号对齐）
+
+### UDS 诊断页
+`ToolsPage` 中 "CAN测试" 按钮打开 `udsDiagnosticPage`，提供：
+- 6 种 UDS 服务：会话控制 / 读DID / 读DTC / 清除DTC / ECU复位 / 保活
+- 节点选择器 (NodeA 0x7E0→0x7E8 / NodeB 0x7E1→0x7E9)
+- 实时状态栏：诊断会话 / MIL 故障灯 / 节点在线 / TEC/REC/负载
+- UDS 通信使用裸 CAN 帧（无 CanTp PCI 字节），与 STM32 端 [uds_handler.c](../stm32_can_node/Tasks/Src/uds_handler.c) 一致
+
+### MOCK 模式与 REAL_CAN
+`Rte` 默认启动 MOCK 模式（50ms 定时器生成模拟数据）。`main.cpp` 中 `setMode(Rte::REAL_CAN)` 切换为真实 CAN。MOCK 模式下 `onSignalUpdated` 自动跳过 Com 层信号，避免双重数据。
 
 ## 关键约定
 - 坐标转换 WGS84→BD09 使用本地算法（`wgs84ToGcj02` + `gcj02ToBd09`），不调百度 API

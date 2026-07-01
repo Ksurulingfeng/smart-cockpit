@@ -312,18 +312,18 @@ void ToolsPage::onSerialTestClicked()
 
 void ToolsPage::onCanbusTestClicked()
 {
-    if (m_canAssistantPage == nullptr) {
-        m_canAssistantPage = new CanAssistantPage(this);
-        connect(m_canAssistantPage, &CanAssistantPage::backButtonClicked,
+    if (m_udsDiagPage == nullptr) {
+        m_udsDiagPage = new UdsDiagnosticPage(this);
+        connect(m_udsDiagPage, &UdsDiagnosticPage::backButtonClicked,
                 this, [this]() {
                     ui->stackedWidget->setCurrentIndex(0);
-                    ui->stackedWidget->removeWidget(m_canAssistantPage);
-                    m_canAssistantPage->deleteLater();
-                    m_canAssistantPage = nullptr;
+                    ui->stackedWidget->removeWidget(m_udsDiagPage);
+                    m_udsDiagPage->deleteLater();
+                    m_udsDiagPage = nullptr;
                 });
-        ui->stackedWidget->addWidget(m_canAssistantPage);
+        ui->stackedWidget->addWidget(m_udsDiagPage);
     }
-    ui->stackedWidget->setCurrentWidget(m_canAssistantPage);
+    ui->stackedWidget->setCurrentWidget(m_udsDiagPage);
 }
 
 void ToolsPage::onGpioTestClicked()

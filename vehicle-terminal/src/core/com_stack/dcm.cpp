@@ -18,10 +18,29 @@ Dcm *Dcm::instance()
 
 Dcm::Dcm(QObject *parent)
     : QObject(parent)
+    , m_reqId(CAN_ID_UDS_REQ_A)
+    , m_respId(CAN_ID_UDS_RESP_A)
 {
     m_s3Timer = new QTimer(this);
     m_s3Timer->setSingleShot(true);
     connect(m_s3Timer, &QTimer::timeout, this, &Dcm::onSessionTimeout);
+}
+
+void Dcm::setTargetNode(int nodeId)
+{
+    m_targetNode = nodeId;
+    if (nodeId == 0) {
+        m_reqId  = CAN_ID_UDS_REQ_A;
+        m_respId = CAN_ID_UDS_RESP_A;
+    } else {
+        m_reqId  = CAN_ID_UDS_REQ_B;
+        m_respId = CAN_ID_UDS_RESP_B;
+    }
+}
+
+void Dcm::sendUdsRequest(const QByteArray &data)
+{
+    emit sendRawFrame(m_reqId, data);
 }
 
 // ==================== 消息入口 ====================
@@ -30,16 +49,30 @@ void Dcm::processUdsMessage(const QByteArray &data)
 {
     if (data.size() < 1) return;
 
-    uint8_t sid = (uint8_t)data[0];
+    uint8_t first = (uint8_t)data[0];
 
+    // 判断是响应还是请求
+    if (first == 0x7F) {
+        // 负响应（来自 STM32） → 直接转发给 UI 显示
+        emit sendUdsResponse(data);
+        return;
+    }
+    if (first & 0x40) {
+        // 正响应 (SID | 0x40, 来自 STM32) → 直接转发给 UI 显示
+        emit sendUdsResponse(data);
+        return;
+    }
+
+    // 以下处理收到的诊断请求（终端作为 UDS Server）
+    uint8_t sid = first;
     switch (sid) {
     case UDS_SID_DIAG_SESSION_CTRL:  handleDiagSessionControl(data); break;
-    case UDS_SID_ECU_RESET:             handleEcuReset(data); break;
-    case UDS_SID_CLEAR_DTC:             handleClearDtcInfo(data); break;
-    case UDS_SID_READ_DTC:              handleReadDtcInfo(data); break;
-    case UDS_SID_READ_DATA_BY_ID:       handleReadDataByIdentifier(data); break;
-    case UDS_SID_WRITE_DATA_BY_ID:      handleWriteDataByIdentifier(data); break;
-    case UDS_SID_TESTER_PRESENT:        handleTesterPresent(data); break;
+    case UDS_SID_ECU_RESET:          handleEcuReset(data); break;
+    case UDS_SID_CLEAR_DTC:          handleClearDtcInfo(data); break;
+    case UDS_SID_READ_DTC:           handleReadDtcInfo(data); break;
+    case UDS_SID_READ_DATA_BY_ID:    handleReadDataByIdentifier(data); break;
+    case UDS_SID_WRITE_DATA_BY_ID:   handleWriteDataByIdentifier(data); break;
+    case UDS_SID_TESTER_PRESENT:     handleTesterPresent(data); break;
     default:
         sendNegativeResponse(sid, UDS_NRC_SERVICE_NOT_SUPPORTED);
         break;
@@ -280,6 +313,7 @@ void Dcm::sendPositiveResponse(uint8_t sid, const QByteArray &data)
     QByteArray resp;
     resp.append((char)(sid | 0x40));  // positive response SID = SID + 0x40
     resp.append(data);
+    emit sendRawFrame(m_respId, resp);
     emit sendUdsResponse(resp);
 }
 
@@ -289,5 +323,6 @@ void Dcm::sendNegativeResponse(uint8_t sid, uint8_t nrc)
     resp.append((char)0x7F);   // Negative Response SID
     resp.append((char)sid);    // 原始 SID
     resp.append((char)nrc);    // NRC
+    emit sendRawFrame(m_respId, resp);
     emit sendUdsResponse(resp);
 }

@@ -20,6 +20,9 @@ public:
     void setMode(Mode m);
     Mode mode() const { return m_mode; }
 
+    // 节点在线状态查询（页面初始化用）
+    bool isNodeOnline(int nodeId) const;
+
 signals:
     void speedChanged(int kmh);
     void rpmChanged(int rpmX10);

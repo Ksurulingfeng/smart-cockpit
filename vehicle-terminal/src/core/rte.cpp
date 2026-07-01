@@ -156,3 +156,8 @@ void Rte::checkNodes()
     check(CAN_NODE_A_ID, m_nodeTimerA, m_nodeAOnline);
     check(CAN_NODE_B_ID, m_nodeTimerB, m_nodeBOnline);
 }
+
+bool Rte::isNodeOnline(int nodeId) const
+{
+    return (nodeId == 0) ? m_nodeAOnline : m_nodeBOnline;
+}

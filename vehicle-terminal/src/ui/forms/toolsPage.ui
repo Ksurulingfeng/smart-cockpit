@@ -621,7 +621,7 @@
             <string notr="true">QToolButton{border:none;background:transparent;}#toolButton_canbusTest:pressed{padding:0px;margin:0px;}</string>
            </property>
            <property name="text">
-            <string>CAN助手</string>
+            <string>UDS诊断</string>
            </property>
            <property name="icon">
             <iconset resource="../../resources/resources.qrc">
