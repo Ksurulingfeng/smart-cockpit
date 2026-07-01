@@ -232,6 +232,19 @@ QString UdsDiagnosticPage::parseUdsResponse(const QByteArray &data) const
         uint16_t did = (data.size() >= 3)
             ? ((uint16_t)(uint8_t)data[1] << 8) | (uint8_t)data[2] : 0;
         QByteArray val = data.mid(3);
+
+        // 数值型 DID → 解析为整数
+        if (did == 0xF1B0 || did == 0xF1B1 || did == 0xF1B2 || did == 0xF1B3
+            || did == 0xF1C1 || did == 0xF1C2 || did == 0xF1C3) {
+            uint16_t num = 0;
+            if (val.size() >= 2)
+                num = (uint8_t)val[0] | ((uint8_t)val[1] << 8);
+            else if (val.size() >= 1)
+                num = (uint8_t)val[0];
+            return QString("正响应 DID=0x%1 → %2 | %3")
+                .arg(did, 4, 16, QChar('0')).arg(num).arg(hex);
+        }
+
         return QString("正响应 DID=0x%1 → \"%2\" | %3")
             .arg(did, 4, 16, QChar('0')).arg(QString::fromUtf8(val)).arg(hex);
     }
