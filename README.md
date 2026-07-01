@@ -134,6 +134,38 @@ python tools/dbc_generate_header.py
 # 输出: shared/can_protocol_common.h + shared/smart_cockpit.dbc
 ```
 
+### Git 协作流程
+
+项目目录天然隔离冲突——`stm32_can_node/` 在 Windows 开发，`vehicle-terminal/` 在 Ubuntu 开发，仅 `shared/` 共享。
+
+```
+Windows（Keil MDK）           Ubuntu（CMake + Qt）
+     │                              │
+     ├─ stm32_can_node/             ├─ vehicle-terminal/
+     ├─ shared/        ←── 共享 ──→ ├─ shared/
+     └─ docs/                       └─ docs/
+```
+
+**日常工作流**：
+
+```bash
+# 每次改代码前先同步
+git pull origin main
+
+# 改完提交（commit message 用中文）
+git add stm32_can_node/          # Windows 侧只加自己的目录
+# 或
+git add vehicle-terminal/        # Ubuntu 侧只加自己的目录
+
+git commit -m "fix: 修复 xxx"
+git push origin main
+```
+
+**冲突处理**：
+- 各自只改自己子目录，互不干扰，绝大多数情况不会冲突
+- `shared/` 目录改协议时：改完 push，另一端 pull 即可同步
+- 如果误改了同一个文件，Git push 会被拒绝 → `git pull` → 手动解决冲突标记 → `git add` → `git commit` → 重新 push
+
 ## 软件分层
 
 ```
