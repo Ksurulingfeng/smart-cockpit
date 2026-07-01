@@ -101,6 +101,7 @@ virtualFolder:
         - path: Tasks/Src/ultrasonic_task.c
         - path: Tasks/Src/actuator_task.c
         - path: Tasks/Src/com_layer.c
+        - path: Tasks/Src/uds_handler.c
       folders: []
     - name: Config
       files:

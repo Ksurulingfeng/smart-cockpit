@@ -6,7 +6,7 @@
 
 #ifdef NODE_A
 #define UDS_RESP_ID CAN_ID_UDS_RESP_A
-#else
+#elif defined(NODE_B)
 #define UDS_RESP_ID CAN_ID_UDS_RESP_B
 #endif
 
