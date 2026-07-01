@@ -49,6 +49,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/widgets
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/pages
+    ${CMAKE_CURRENT_SOURCE_DIR}/../shared
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 

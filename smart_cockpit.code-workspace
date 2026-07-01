@@ -1,0 +1,14 @@
+{
+	"folders": [
+        {
+            "path": "."
+        },
+        {
+            "path": "vehicle-terminal"
+        },
+        {
+            "path": "stm32_can_node"
+        }
+    ],
+    "settings": {}
+}

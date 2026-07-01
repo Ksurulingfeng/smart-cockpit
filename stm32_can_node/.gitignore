@@ -1,0 +1,20 @@
+# dot files
+/.vscode/launch.json
+/.settings
+/.eide/log
+/.eide.usr.ctx.json
+
+# project out
+/build
+/bin
+/obj
+/out
+/MDK-ARM/stm32_can_node.uvoptx
+/MDK-ARM/stm32_can_node.uvguix.*
+
+# config file
+/Config/config.h
+
+# eide template
+*.ept
+*.eide-template

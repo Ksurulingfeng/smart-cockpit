@@ -1,0 +1,91 @@
+VERSION ""
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	BO_TX_BU_
+
+BS_: 250000
+
+BU_: NodeA NodeB Master
+
+BO_ 128 A_Buzzer_Ctrl: 1 Master
+ SG_ Mode : 0|8@1+ (1,0) [0|3] "" Master
+
+BO_ 129 A_LED_Ctrl: 1 Master
+ SG_ State : 0|8@1+ (1,0) [0|3] "" Master
+
+BO_ 256 B_Fan_Target_Speed: 1 Master
+ SG_ Target_Speed : 0|8@1+ (1,0) [0|100] "%" Master
+
+BO_ 257 B_Window_Target_Pos: 1 Master
+ SG_ Target_Pos : 0|8@1+ (1,0) [0|100] "%" Master
+
+BO_ 258 B_Buzzer_Ctrl: 1 Master
+ SG_ Mode : 0|8@1+ (1,0) [0|3] "" Master
+
+BO_ 259 B_LED_Ctrl: 1 Master
+ SG_ State : 0|8@1+ (1,0) [0|3] "" Master
+
+BO_ 384 A_Ultrasonic: 3 NodeA
+ SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
+ SG_ Distance_cm : 8|16@1+ (1,0) [0|400] "cm" Master
+
+BO_ 385 A_Gear: 2 NodeA
+ SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
+ SG_ Gear : 8|8@1+ (1,0) [0|2] "" Master
+
+BO_ 386 A_Fuel: 3 NodeA
+ SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
+ SG_ Fuel_Percent_x10 : 8|16@1+ (0.1,0) [0|1000] "%" Master
+
+BO_ 387 A_Rpm: 3 NodeA
+ SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
+ SG_ Rpm_Percent_x10 : 8|16@1+ (0.1,0) [0|1000] "%" Master
+
+BO_ 512 B_Temperature: 3 NodeB
+ SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
+ SG_ Temperature_x10 : 8|16@1+ (0.1,0) [-400|850] "degC" Master
+
+BO_ 513 B_Humidity: 3 NodeB
+ SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
+ SG_ Humidity_x10 : 8|16@1+ (0.1,0) [0|1000] "%" Master
+
+BO_ 514 B_Fan_Speed_Actual: 2 NodeB
+ SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
+ SG_ Actual_Speed : 8|8@1+ (1,0) [0|100] "%" Master
+
+BO_ 515 B_Window_Pos_Actual: 2 NodeB
+ SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
+ SG_ Actual_Pos : 8|8@1+ (1,0) [0|100] "%" Master
+
+BO_ 768 Diagnostic: 8 NodeA
+ SG_ Header : 0|8@1+ (1,0) [0|255] "" Master
+ SG_ TEC : 8|16@1+ (1,0) [0|255] "" Master
+ SG_ REC : 24|16@1+ (1,0) [0|255] "" Master
+ SG_ TX_Msg_Count : 40|16@1+ (1,0) [0|65535] "" Master
+ SG_ Bus_Load : 56|8@1+ (1,0) [0|100] "%" Master
+
+CM_ BO_ 128 "A_Buzzer_Ctrl";
+CM_ BO_ 129 "A_LED_Ctrl";
+CM_ BO_ 256 "B_Fan_Target_Speed";
+CM_ BO_ 257 "B_Window_Target_Pos";
+CM_ BO_ 258 "B_Buzzer_Ctrl";
+CM_ BO_ 259 "B_LED_Ctrl";
+CM_ BO_ 384 "A_Ultrasonic";
+CM_ BO_ 385 "A_Gear";
+CM_ BO_ 386 "A_Fuel";
+CM_ BO_ 387 "A_Rpm";
+CM_ BO_ 512 "B_Temperature";
+CM_ BO_ 513 "B_Humidity";
+CM_ BO_ 514 "B_Fan_Speed_Actual";
+CM_ BO_ 515 "B_Window_Pos_Actual";
+CM_ BO_ 768 "Diagnostic";
+VAL_ 385 Gear 0 "P" 1 "R" 2 "D" ;
+VAL_ 128 Mode 0 "OFF" 3 "ALERT" ;
+VAL_ 258 Mode 0 "OFF" 3 "ALERT" ;
+VAL_ 129 State 0 "OFF" 3 "ALERT" ;
+VAL_ 259 State 0 "OFF" 3 "ALERT" ;

@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "canmanager.h"
-#include "vehicledataprocessor.h"
+#include "rte.h"
 #include "config.h"
 #include "ec20manager.h"
 #include <QApplication>
@@ -42,8 +42,8 @@ int main(int argc, char *argv[])
     quitChecker.start(0);
 
     // 初始化 CAN 和 EC20 4G 模块
-    CanManager::instance()->connectDevice(Config::CAN_DEVICE, Config::CAN_BITRATE);
-    VehicleDataProcessor::instance();
+    CanManager::instance()->connectDevice(Config::CAN_DEVICE, CAN_BITRATE_HZ);
+    Rte::instance();
     EC20Manager::instance()->init();
 
     MainWindow mainWindow;

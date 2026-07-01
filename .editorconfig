@@ -1,0 +1,27 @@
+# EditorConfig — 跨编辑器编码规范
+# http://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{s,S}]
+indent_style = space
+indent_size = 4
+
+[*.md]
+trim_trailing_whitespace = false
+
+[Makefile*]
+indent_style = tab
+indent_size = 4
+
+# Keil MDK 工程文件 — 需要 Windows 换行符
+[*.{uvprojx,uvoptx}]
+end_of_line = crlf

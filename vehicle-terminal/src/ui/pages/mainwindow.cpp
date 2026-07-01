@@ -8,7 +8,7 @@
 #include "settingsPage.h"
 #include "toolsPage.h"
 #include "ui_mainwindow.h"
-#include "vehicledataprocessor.h"
+#include "rte.h"
 #include "volumemanager.h"
 #include "ec20manager.h"
 #include <QDateTime>
@@ -141,22 +141,15 @@ void MainWindow::setupPages()
     connect(ui->toolButton_settings, &QToolButton::clicked, this,
             [this]() { ui->stackedWidget->setCurrentWidget(m_settingsPage); });
 
-    // 连接VehicleDataProcessor到页面
-    VehicleDataProcessor *vdp = VehicleDataProcessor::instance();
-    connect(vdp, &VehicleDataProcessor::speedChanged, m_homePage,
-            &HomePage::updateSpeed);
-    connect(vdp, &VehicleDataProcessor::rpmChanged, m_homePage,
-            &HomePage::updateRpm);
-    connect(vdp, &VehicleDataProcessor::oilChanged, m_homePage,
-            &HomePage::updateOil);
-    connect(vdp, &VehicleDataProcessor::temperatureChanged, m_homePage,
-            &HomePage::updateTemperature);
-    connect(vdp, &VehicleDataProcessor::humidityChanged, m_homePage,
-            &HomePage::updateHumidity);
-    connect(vdp, &VehicleDataProcessor::gearChanged, m_rearViewCameraPage,
-            &RearViewCamera::onGearChanged);
-    connect(vdp, &VehicleDataProcessor::distanceChanged, m_rearViewCameraPage,
-            &RearViewCamera::onDistanceChanged);
+    // 连接 RTE 到页面
+    Rte *rte = Rte::instance();
+    connect(rte, &Rte::speedChanged, m_homePage, &HomePage::updateSpeed);
+    connect(rte, &Rte::rpmChanged, m_homePage, &HomePage::updateRpm);
+    connect(rte, &Rte::oilChanged, m_homePage, &HomePage::updateOil);
+    connect(rte, &Rte::temperatureChanged, m_homePage, &HomePage::updateTemperature);
+    connect(rte, &Rte::humidityChanged, m_homePage, &HomePage::updateHumidity);
+    connect(rte, &Rte::gearChanged, m_rearViewCameraPage, &RearViewCamera::onGearChanged);
+    connect(rte, &Rte::distanceChanged, m_rearViewCameraPage, &RearViewCamera::onDistanceChanged);
 }
 
 void MainWindow::setupIcons()

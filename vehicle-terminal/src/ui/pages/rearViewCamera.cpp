@@ -1,6 +1,6 @@
 #include "rearViewCamera.h"
 #include "v4l2camera.h"
-#include "canmanager.h"
+#include "comlayer.h"
 #include "config.h"
 #include <QPainter>
 #include <QDebug>
@@ -32,7 +32,7 @@ RearViewCamera::~RearViewCamera()
 
 void RearViewCamera::onGearChanged(int gear)
 {
-    if (gear == Config::GEAR_R) {
+    if (gear == CAN_GEAR_R) {
         start(Config::RVC_DEVICE, Config::RVC_WIDTH, Config::RVC_HEIGHT);
     } else {
         stop();
@@ -95,9 +95,8 @@ void RearViewCamera::stop()
     if (m_alertActive) {
         m_alertActive = false;
         m_alertTimer->stop();
-        CanManager *can = CanManager::instance();
-        can->sendFrame(Config::CAN_ID_A_LED, QByteArray(1, Config::CAN_LED_OFF));
-        can->sendFrame(Config::CAN_ID_A_BUZZER, QByteArray(1, Config::CAN_BUZZER_OFF));
+        ComLayer::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_OFF);
+        ComLayer::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_OFF);
     }
     hide();
     qDebug() << "倒车影像已关闭";
@@ -114,17 +113,16 @@ void RearViewCamera::setDistance(int cm)
         m_alertSuppressed = false;
 
     if (m_active) {
-        CanManager *can = CanManager::instance();
         if (isBelow && !wasBelow && !m_alertSuppressed) {
             m_alertActive = true;
             m_alertTimer->start();
-            can->sendFrame(Config::CAN_ID_A_LED, QByteArray(1, Config::CAN_LED_ALERT));
-            can->sendFrame(Config::CAN_ID_A_BUZZER, QByteArray(1, Config::CAN_BUZZER_ALERT));
+            ComLayer::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_ALERT);
+            ComLayer::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_ALERT);
         } else if (!isBelow && wasBelow) {
             m_alertActive = false;
             m_alertTimer->stop();
-            can->sendFrame(Config::CAN_ID_A_LED, QByteArray(1, Config::CAN_LED_OFF));
-            can->sendFrame(Config::CAN_ID_A_BUZZER, QByteArray(1, Config::CAN_BUZZER_OFF));
+            ComLayer::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_OFF);
+            ComLayer::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_OFF);
         }
     }
 
@@ -137,9 +135,8 @@ void RearViewCamera::onAlertTimeout()
         return;
     m_alertActive     = false;
     m_alertSuppressed = true; // 超时后抑制，距离恢复前不再触发
-    CanManager *can   = CanManager::instance();
-    can->sendFrame(Config::CAN_ID_A_LED, QByteArray(1, Config::CAN_LED_OFF));
-    can->sendFrame(Config::CAN_ID_A_BUZZER, QByteArray(1, Config::CAN_BUZZER_OFF));
+    ComLayer::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_OFF);
+    ComLayer::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_OFF);
 }
 
 void RearViewCamera::onImageReady(const QImage &image)

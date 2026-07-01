@@ -11,3 +11,8 @@ Thumbs.db
 *~
 *.tmp
 *.bak
+
+# --- IDE ---
+.vscode/
+.idea/
+*.code-workspace

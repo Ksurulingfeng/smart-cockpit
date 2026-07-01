@@ -1,9 +1,9 @@
 #include "toolsPage.h"
 #include "ui_toolsPage.h"
-#include "canmanager.h"
 #include "config.h"
 #include "configmanager.h"
-#include "vehicledataprocessor.h"
+#include "rte.h"
+#include "comlayer.h"
 #include <QDebug>
 
 ToolsPage::ToolsPage(QWidget *parent)
@@ -65,35 +65,27 @@ void ToolsPage::setupConnections()
     connect(ui->switch_led, &SwitchButton::toggled,
             this, &ToolsPage::onLedToggled);
 
-    // ===== CAN 状态反馈 =====
-    VehicleDataProcessor *vdp = VehicleDataProcessor::instance();
-    connect(vdp, &VehicleDataProcessor::fanSpeedChanged,
-            this, &ToolsPage::onFanCurSpeed);
-    connect(vdp, &VehicleDataProcessor::windowPosChanged,
-            this, &ToolsPage::onWindowCurPos);
+    // ===== 执行器状态反馈 =====
+    Rte *rte = Rte::instance();
+    connect(rte, &Rte::fanSpeedChanged, this, &ToolsPage::onFanCurSpeed);
+    connect(rte, &Rte::windowPosChanged, this, &ToolsPage::onWindowCurPos);
 }
 
-// ==================== CAN 发送 ====================
+// ==================== COM 发送 ====================
 
 void ToolsPage::sendFanTarget(int percent)
 {
-    QByteArray data;
-    data.append(static_cast<char>(qBound(0, percent, 100)));
-    CanManager::instance()->sendFrame(Config::CAN_ID_B_FAN_TARGET, data);
+    ComLayer::instance()->sendSignal(SID_B_FAN_TARGET, (uint8_t)qBound(0, percent, 100));
 }
 
 void ToolsPage::sendWindowTarget(int percent)
 {
-    QByteArray data;
-    data.append(static_cast<char>(qBound(0, percent, 100)));
-    CanManager::instance()->sendFrame(Config::CAN_ID_B_WINDOW_TARGET, data);
+    ComLayer::instance()->sendSignal(SID_B_WINDOW_TARGET, (uint8_t)qBound(0, percent, 100));
 }
 
 void ToolsPage::sendLedState(bool on)
 {
-    QByteArray data;
-    data.append(static_cast<char>(on ? 0x01 : 0x00));
-    CanManager::instance()->sendFrame(Config::CAN_ID_B_LED, data);
+    ComLayer::instance()->sendSignal(SID_B_LED_STATE, on ? 0x01u : 0x00u);
 }
 
 // ==================== 空 调 ====================
@@ -228,7 +220,7 @@ void ToolsPage::onLedToggled(bool on)
     saveState();
 }
 
-// ==================== CAN 状态反馈 ====================
+// ==================== 执行器状态反馈 ====================
 
 void ToolsPage::onFanCurSpeed(int percent)
 {
@@ -260,7 +252,7 @@ void ToolsPage::loadState()
     m_ledOn            = cfg->value("tools/ledOn", false).toBool();
     m_windowPos        = cfg->value("tools/windowPos", 0).toInt();
 
-    // 恢复 UI（blockSignals 避免 toggle 信号触发二次 CAN 发送）
+    // 恢复 UI（blockSignals 避免 toggle 信号触发二次发送）
     ui->switch_ac->blockSignals(true);
     ui->switch_ac->setChecked(m_acOn);
     ui->switch_ac->blockSignals(false);
@@ -280,7 +272,7 @@ void ToolsPage::loadState()
     ui->label_windowPercent->setText(QString("%1%").arg(m_windowPos));
     updateWindowLabel();
 
-    // 发送初始状态到 CAN
+    // 发送初始状态
     sendLedState(m_ledOn);
     if (m_acOn)
         sendFanTarget(m_fanLevel);
