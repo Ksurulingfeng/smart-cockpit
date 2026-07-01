@@ -29,22 +29,14 @@
 
 ### 2.1 物理寻址
 
-诊断仪通过两个 CAN ID 与 ECU 一对一通信：
+诊断仪通过两个 CAN ID 与 ECU 一对一通信。本项目两个节点各用不同的 ID 对：
 
 ```
-诊断仪 → ECU:   0x7E0  (物理请求)
-ECU → 诊断仪:   0x7E8  (物理响应)
+节点 A (动力域):  请求 0x7E0 / 响应 0x7E8
+节点 B (车身域):  请求 0x7E1 / 响应 0x7E9
 ```
 
-每辆车可以有多个 ECU，每个都有自己的请求/响应 ID。比如：
-
-```
-0x7E0/0x7E8 — 发动机 ECU
-0x7E1/0x7E9 — 变速箱 ECU
-0x7E2/0x7EA — ABS ECU
-```
-
-本项目只实现了一个 ECU（STM32），所以只用 `0x7E0` + `0x7E8`。
+这样诊断仪可以分别跟两个节点对话，不会冲突。
 
 ### 2.2 帧格式
 
@@ -96,21 +88,23 @@ ECU → 诊断仪:   0x7E8  (物理响应)
 
 本项目支持的 DID：
 
-| DID | 数据 | 用途 |
-|---|---|---|
-| 0xF1A0 | "1.0" | 软件版本号 |
-| 0xF190 | "STM32-NODEA" 或 "STM32-NODEB" | VIN 码（模拟） |
-| 0xF100 | "STM32-A" 或 "STM32-B" | ECU 序列号 |
-| 0xF1B0 | 总线负载百分比 | CAN 总线健康 |
-| 0xF1B1 | TEC 当前值 | 发送错误计数 |
-| 0xF1B2 | REC 当前值 | 接收错误计数 |
-| 0xF1B3 | 累计发送帧数 | 运行统计 |
+| DID | 节点 A 数据 | 节点 B 数据 | 用途 |
+|---|---|---|---|---|
+| 0xF1A0 | "1.0" | "1.0" | 软件版本号 |
+| 0xF190 | "NODEA" | "NODEB" | VIN 码（模拟） |
+| 0xF100 | "ST-A" | "ST-B" | ECU 序列号 |
+| 0xF1B0 | 总线负载 | 总线负载 | CAN 总线健康 |
+| 0xF1B1 | TEC 值 | TEC 值 | 发送错误计数 |
+| 0xF1B2 | REC 值 | REC 值 | 接收错误计数 |
+| 0xF1B3 | 累计帧数 | 累计帧数 | 运行统计 |
+
+响应按 ISO 14229-1 标准格式：`[SID+0x40] [DID高] [DID低] [数据...]`。
 
 **示例**：
 
 ```
 请求: [0x22, 0xF1, 0x90]     — 读 VIN 码
-响应: [0x62, 'S','T','M','3','2','-','N','O','D','E','A']
+响应: [0x62, 0xF1, 0x90, 'N','O','D','E','A']   ← 8字节
 ```
 
 如果请求不支持的 DID（比如 0xF200），回复 NRC 0x31（请求超出范围）。
@@ -145,26 +139,25 @@ ECU → 诊断仪:   0x7E8  (物理响应)
 
 ## 四、本项目中的完整交互示例
 
-诊断仪（Python / cantools / 车载终端）和 STM32 之间的一次典型对话：
+诊断仪和节点 A（0x7E0/0x7E8）的典型对话：
 
 ```
-1. Tester → STM32:  [0x10, 0x03]            "进入扩展会话"
-   STM32 → Tester:  [0x50, 0x03, 0, 50, 0]  "好的，已进入"
+1. Tester → NodeA:  [0x10, 0x03]            "进入扩展会话"
+   NodeA → Tester:  [0x50, 0x03, 0, 50, 200] "好的"
 
-2. Tester → STM32:  [0x22, 0xF1, 0x90]      "读 VIN 码"
-   STM32 → Tester:  [0x62, 'S','T',...,'A']   "STM32-NODEA"
+2. Tester → NodeA:  [0x22, 0xF1, 0x90]      "读 VIN"
+   NodeA → Tester:  [0x62, 0xF1, 0x90, 'N','O','D','E','A']  "NODEA"
 
-3. Tester → STM32:  [0x22, 0xF1, 0xB1]      "读 TEC"
-   STM32 → Tester:  [0x62, 0x00, 0x00]       "TEC=0，无错误"
+3. Tester → NodeA:  [0x22, 0xF1, 0xB1]      "读 TEC"
+   NodeA → Tester:  [0x62, 0xF1, 0xB1, 0, 0]  "TEC=0"
 
-4. ... (3 秒后) ...
-   Tester → STM32:  [0x3E, 0x00]             "会话保持"
-   (不回复，因为子功能=0x00)
+4. Tester → NodeA:  [0x3E, 0x00]             "会话保持"(不回复)
 
-5. Tester → STM32:  [0x11, 0x01]             "硬复位"
-   STM32 → Tester:  [0x51, 0x01]             "收到，即将复位"
-   ... 100ms 后 STM32 重启 ...
+5. Tester → NodeA:  [0x11, 0x01]             "硬复位"
+   NodeA → Tester:  [0x51, 0x01]             "收到，20ms后重启"
 ```
+
+节点 B 用相同命令格式，CAN ID 换成 `7E1`/`7E9`。
 
 ---
 
@@ -269,17 +262,20 @@ F1 90       → 你问的那个数据项
 ### 6.5 试试其他命令
 
 ```bash
-# 读 ECU 序列号
-cansend vcan0 7E0#22.F1.00
+# 节点 A（0x7E0 请求）
+cansend can0 7E0#22.F1.00    # 读序列号 → "ST-A"
+cansend can0 7E0#22.F1.90    # 读 VIN → "NODEA"
+cansend can0 7E0#22.F1.B1    # 读 TEC
+cansend can0 7E0#11.01       # 复位
 
-# 读软件版本
-cansend vcan0 7E0#22.F1.A0
+# 节点 B（0x7E1 请求）
+cansend can0 7E1#22.F1.00    # 读序列号 → "ST-B"
+cansend can0 7E1#22.F1.90    # 读 VIN → "NODEB"
+cansend can0 7E1#11.01       # 复位
 
-# 读 TEC（CAN 错误计数）
-cansend vcan0 7E0#22.F1.B1
-
-# 让 STM32 复位
-cansend vcan0 7E0#11.01
+# 监听（两个窗口分别开）
+candump can0,7E8:FFFFFFFF    # 看 NodeA 回复
+candump can0,7E9:FFFFFFFF    # 看 NodeB 回复
 ```
 
 ### 6.6 从车载终端（Qt）发 UDS

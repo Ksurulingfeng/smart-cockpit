@@ -1,5 +1,5 @@
 // Auto-generated from tools/can_signals.json
-// 2026-07-01 21:45:21
+// 2026-07-01 23:13:14
 
 #ifndef UDS_PROTOCOL_H
 #define UDS_PROTOCOL_H
@@ -22,8 +22,10 @@
 #define UDS_NRC_CONDITIONS_NOT_CORRECT 0x22
 #define UDS_NRC_REQUEST_OUT_OF_RANGE   0x31
 
-#define CAN_ID_UDS_REQUEST   0x7E0
-#define CAN_ID_UDS_RESPONSE  0x7E8
+#define CAN_ID_UDS_REQ_A  0x7E0
+#define CAN_ID_UDS_RESP_A 0x7E8
+#define CAN_ID_UDS_REQ_B  0x7E1
+#define CAN_ID_UDS_RESP_B 0x7E9
 
 #define DID_ECU_SERIAL          0xF100
 #define DID_VIN_NUMBER          0xF190

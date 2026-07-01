@@ -1,5 +1,5 @@
 // Auto-generated from tools/can_signals.json
-// 2026-07-01 21:45:21
+// 2026-07-01 23:13:14
 
 #ifndef COM_SIGNAL_DEFS_H
 #define COM_SIGNAL_DEFS_H
