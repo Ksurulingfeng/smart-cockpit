@@ -104,7 +104,7 @@ static void process_rx_command(uint32_t id, uint8_t *data, uint8_t len)
     Com_ReceiveFrame(id, data, len);
     uint8_t val;
     switch (id) {
-        case UDS_REQ_ID:
+        case CAN_ID_UDS_REQ_A:
             Uds_HandleRequest(data, len);
             break;
         case CAN_ID_A_BUZZER_CTRL:
@@ -163,7 +163,7 @@ static void process_rx_command(uint32_t id, uint8_t *data, uint8_t len)
     Com_ReceiveFrame(id, data, len);
     uint8_t val;
     switch (id) {
-        case UDS_REQ_ID:
+        case CAN_ID_UDS_REQ_B:
             Uds_HandleRequest(data, len);
             break;
         case CAN_ID_B_FAN_TARGET_SPEED:

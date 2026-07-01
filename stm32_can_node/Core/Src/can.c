@@ -23,7 +23,7 @@
 /* USER CODE BEGIN 0 */
 #include "task_headfile.h"
 #include "can_drv.h"
-#include "uds_handler.h"
+#include "../../../shared/uds_protocol.h"
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan;
@@ -85,7 +85,11 @@ void MX_CAN_Init(void)
     uds_filter.FilterBank           = 1;
     uds_filter.FilterMode           = CAN_FILTERMODE_IDMASK;
     uds_filter.FilterScale          = CAN_FILTERSCALE_32BIT;
-    uds_filter.FilterIdHigh         = ((uint32_t)UDS_REQ_ID << 5);
+#ifdef NODE_A
+    uds_filter.FilterIdHigh         = ((uint32_t)CAN_ID_UDS_REQ_A << 5);
+#else
+    uds_filter.FilterIdHigh         = ((uint32_t)CAN_ID_UDS_REQ_B << 5);
+#endif
     uds_filter.FilterIdLow          = 0x0000;
     uds_filter.FilterMaskIdHigh     = (0x7FF << 5);
     uds_filter.FilterMaskIdLow      = 0x0000;
