@@ -3,7 +3,7 @@
 #include "config.h"
 #include "configmanager.h"
 #include "rte.h"
-#include "comlayer.h"
+#include "com_stack/com.h"
 #include <QDebug>
 
 ToolsPage::ToolsPage(QWidget *parent)
@@ -75,17 +75,17 @@ void ToolsPage::setupConnections()
 
 void ToolsPage::sendFanTarget(int percent)
 {
-    ComLayer::instance()->sendSignal(SID_B_FAN_TARGET, (uint8_t)qBound(0, percent, 100));
+    Com::instance()->sendSignal(SID_B_FAN_TARGET, (uint8_t)qBound(0, percent, 100));
 }
 
 void ToolsPage::sendWindowTarget(int percent)
 {
-    ComLayer::instance()->sendSignal(SID_B_WINDOW_TARGET, (uint8_t)qBound(0, percent, 100));
+    Com::instance()->sendSignal(SID_B_WINDOW_TARGET, (uint8_t)qBound(0, percent, 100));
 }
 
 void ToolsPage::sendLedState(bool on)
 {
-    ComLayer::instance()->sendSignal(SID_B_LED_STATE, on ? 0x01u : 0x00u);
+    Com::instance()->sendSignal(SID_B_LED_STATE, on ? 0x01u : 0x00u);
 }
 
 // ==================== 空 调 ====================
@@ -104,7 +104,11 @@ void ToolsPage::onAcToggled(bool on)
         ui->slider_fanSpeed->setValue(m_fanLevel);
     } else {
         sendFanTarget(0);
+        // blockSignals 避免 setValue(0) 触发 onFanSliderChanged 把 m_fanLevel 清零
+        ui->slider_fanSpeed->blockSignals(true);
         ui->slider_fanSpeed->setValue(0);
+        ui->slider_fanSpeed->blockSignals(false);
+        ui->label_fanValue->setText("0");
     }
     saveState();
 }
@@ -202,7 +206,7 @@ void ToolsPage::updateWindowLabel()
 {
     if (m_windowPos >= 95)
         ui->label_windowStatus->setText("已完全打开");
-    else if (m_windowPos <= 5)
+    else if (m_windowPos < 5)
         ui->label_windowStatus->setText("已关闭");
     else
         ui->label_windowStatus->setText(

@@ -52,7 +52,7 @@ CanAssistantPage::~CanAssistantPage()
     }
     // 如果助手打开了设备，退出时恢复到默认 CAN 配置
     if (m_deviceOpenedByUs) {
-        m_canManager->connectDevice(Config::CAN_DEVICE, Config::CAN_BITRATE);
+        m_canManager->connectDevice(Config::CAN_DEVICE, CAN_BITRATE_HZ);
     }
     delete ui;
 }
@@ -173,7 +173,7 @@ void CanAssistantPage::onCloseDevice()
 
     // 仅当我们主动打开设备时才恢复默认连接
     if (m_deviceOpenedByUs) {
-        m_canManager->connectDevice(Config::CAN_DEVICE, Config::CAN_BITRATE);
+        m_canManager->connectDevice(Config::CAN_DEVICE, CAN_BITRATE_HZ);
         m_deviceOpenedByUs = false;
     }
 

@@ -1,5 +1,15 @@
+/**
+ * @file    rte.cpp
+ * @brief   Rte 运行时环境 — 信号路由 + MOCK 模式 + 心跳检测
+ *
+ * 改造后：
+ * - 删除了 onCanFrame 中的手动字节解包（迁移到 Com 层）
+ * - onSignalUpdated 纯路由：SignalId_t → typed Qt signals
+ * - 心跳检测仅刷新计时器，不解析数据
+ */
+
 #include "rte.h"
-#include "comlayer.h"
+#include "com_stack/com.h"
 #include "canmanager.h"
 #include "config.h"
 #include <QTimer>
@@ -12,13 +22,19 @@ Rte *Rte::instance()
     return &inst;
 }
 
-Rte::Rte()
+Rte::Rte(QObject *parent)
+    : QObject(parent)
 {
+    // REAL_CAN 模式：仅刷新心跳计时器（解包/校验由 Com 层负责）
     connect(CanManager::instance(), &CanManager::frameReceived,
             this, [this](const CanManager::CanFrame &frame) {
                 if (m_mode == REAL_CAN)
-                    onCanFrame(frame.id, (const uint8_t *)frame.data.constData(), frame.data.size());
+                    refreshNodeTimer(frame.id);
             });
+
+    // 订阅 Com 层统一解包后的信号更新
+    connect(Com::instance(), &Com::signalUpdated,
+            this, &Rte::onSignalUpdated);
 
     m_mockTimer = new QTimer(this);
     connect(m_mockTimer, &QTimer::timeout, this, &Rte::mockTick);
@@ -35,15 +51,18 @@ void Rte::setMode(Mode m)
 {
     if (m == m_mode) return;
     m_mode = m;
-    ComLayer::instance()->resetCounters();
+    Com::instance()->resetCounters();
     m_mockStep = 0;
     if (m == MOCK) m_mockTimer->start(50);
     else           m_mockTimer->stop();
 }
 
-static int rpmToSpeed(int rpmX10) {
+int Rte::rpmToSpeed(int rpmX10)
+{
     return (int)((rpmX10 / 10) * 60 * 3.141592653589793 * 0.635 * 60.0 / (3.5 * 1000.0));
 }
+
+// ==================== MOCK 模式（完全不变） ====================
 
 void Rte::mockTick()
 {
@@ -79,50 +98,51 @@ void Rte::mockTick()
     emit gearChanged(m_mockGear);
 }
 
-void Rte::onCanFrame(uint32_t canId, const uint8_t *data, uint8_t len)
-{
-    ComLayer::instance()->processCanFrame(canId, data, len);
+// ==================== Com→Rte 信号路由（替代旧 onCanFrame 解包） ====================
 
+void Rte::onSignalUpdated(SignalId_t id, uint32_t value)
+{
+    if (m_mode != REAL_CAN) return; // MOCK 模式由 mockTick 独立驱动
+
+    switch (id) {
+    case SID_DISTANCE_CM:
+        emit distanceChanged((int)value);
+        break;
+    case SID_GEAR:
+        emit gearChanged((int)value);
+        break;
+    case SID_FUEL_PERCENT_X10:
+        emit oilChanged((int)value);
+        break;
+    case SID_RPM_PERCENT_X10: {
+        int rpm = (int)value;
+        emit rpmChanged(rpm);
+        emit speedChanged(rpmToSpeed(rpm));
+        break;
+    }
+    case SID_TEMPERATURE_X10:
+        emit temperatureChanged((int)(int16_t)value);
+        break;
+    case SID_HUMIDITY_X10:
+        emit humidityChanged((int)value);
+        break;
+    case SID_FAN_ACTUAL_SPEED:
+        emit fanSpeedChanged((int)value);
+        break;
+    case SID_WINDOW_ACTUAL_POS:
+        emit windowPosChanged((int)value);
+        break;
+    default:
+        break;
+    }
+}
+
+// ==================== 心跳检测 ====================
+
+void Rte::refreshNodeTimer(uint32_t canId)
+{
     if (canId >= 0x180 && canId <= 0x183) m_nodeTimerA.restart();
     if (canId >= 0x200 && canId <= 0x203) m_nodeTimerB.restart();
-
-    if (len < 2) return;
-    auto u8    = [&](int i) -> quint8  { return data[i]; };
-    auto s16le = [&](int i) -> qint16  { return (qint16)(u8(i) | (u8(i + 1) << 8)); };
-    auto u16le = [&](int i) -> quint16 { return (quint16)(u8(i) | (u8(i + 1) << 8)); };
-    bool valid = CAN_GET_VALID(u8(0));
-
-    switch (canId) {
-        case CAN_ID_A_ULTRASONIC:
-            if (valid) emit distanceChanged((int)u16le(1));
-            break;
-        case CAN_ID_A_GEAR:
-            if (valid) emit gearChanged((int)u8(1));
-            break;
-        case CAN_ID_A_FUEL:
-            if (valid) emit oilChanged((int)u16le(1));
-            break;
-        case CAN_ID_A_RPM: {
-            if (valid) {
-                int rpm = (int)u16le(1);
-                emit rpmChanged(rpm);
-                emit speedChanged(rpmToSpeed(rpm));
-            }
-            break;
-        }
-        case CAN_ID_B_TEMPERATURE:
-            if (valid) emit temperatureChanged((int)s16le(1));
-            break;
-        case CAN_ID_B_HUMIDITY:
-            if (valid) emit humidityChanged((int)u16le(1));
-            break;
-        case CAN_ID_B_FAN_SPEED_ACTUAL:
-            if (valid) emit fanSpeedChanged((int)u8(1));
-            break;
-        case CAN_ID_B_WINDOW_POS_ACTUAL:
-            if (valid) emit windowPosChanged((int)u8(1));
-            break;
-    }
 }
 
 void Rte::checkNodes()

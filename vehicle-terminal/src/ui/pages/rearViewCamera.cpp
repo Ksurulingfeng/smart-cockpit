@@ -1,6 +1,6 @@
 #include "rearViewCamera.h"
 #include "v4l2camera.h"
-#include "comlayer.h"
+#include "com_stack/com.h"
 #include "config.h"
 #include <QPainter>
 #include <QDebug>
@@ -95,8 +95,8 @@ void RearViewCamera::stop()
     if (m_alertActive) {
         m_alertActive = false;
         m_alertTimer->stop();
-        ComLayer::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_OFF);
-        ComLayer::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_OFF);
+        Com::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_OFF);
+        Com::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_OFF);
     }
     hide();
     qDebug() << "倒车影像已关闭";
@@ -116,13 +116,13 @@ void RearViewCamera::setDistance(int cm)
         if (isBelow && !wasBelow && !m_alertSuppressed) {
             m_alertActive = true;
             m_alertTimer->start();
-            ComLayer::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_ALERT);
-            ComLayer::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_ALERT);
+            Com::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_ALERT);
+            Com::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_ALERT);
         } else if (!isBelow && wasBelow) {
             m_alertActive = false;
             m_alertTimer->stop();
-            ComLayer::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_OFF);
-            ComLayer::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_OFF);
+            Com::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_OFF);
+            Com::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_OFF);
         }
     }
 
@@ -135,8 +135,8 @@ void RearViewCamera::onAlertTimeout()
         return;
     m_alertActive     = false;
     m_alertSuppressed = true; // 超时后抑制，距离恢复前不再触发
-    ComLayer::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_OFF);
-    ComLayer::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_OFF);
+    Com::instance()->sendSignal(SID_A_LED_STATE, CAN_LED_OFF);
+    Com::instance()->sendSignal(SID_A_BUZZER_MODE, CAN_BUZZER_OFF);
 }
 
 void RearViewCamera::onImageReady(const QImage &image)

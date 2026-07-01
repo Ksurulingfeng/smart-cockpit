@@ -1,5 +1,10 @@
 #include "mainwindow.h"
 #include "canmanager.h"
+#include "com_stack/pdur.h"
+#include "com_stack/com.h"
+#include "com_stack/cantp.h"
+#include "com_stack/dcm.h"
+#include "com_stack/dem.h"
 #include "rte.h"
 #include "config.h"
 #include "ec20manager.h"
@@ -41,9 +46,31 @@ int main(int argc, char *argv[])
     });
     quitChecker.start(0);
 
-    // 初始化 CAN 和 EC20 4G 模块
+    // 初始化 CAN Stack: CanMgr → PduR(路由) → Com(E2E+解包) / CanTp(多帧) → Rte
     CanManager::instance()->connectDevice(Config::CAN_DEVICE, CAN_BITRATE_HZ);
-    Rte::instance();
+    CanTp::instance()->configure();   // UDS 多帧传输
+    PduR::instance();                 // 建立 CanManager ↔ Com/CanTp 路由
+    Com::instance();                  // E2E 校验 + 信号解包
+    Rte::instance()->setMode(Rte::REAL_CAN);
+
+    // 诊断栈: CanTp → DCM → DEM
+    Dem::instance();                  // DTC 故障管理（从 NVM 加载）
+    Dcm::instance();                  // UDS 服务处理
+    QObject::connect(CanTp::instance(), &CanTp::messageReceived,
+                     Dcm::instance(), &Dcm::processUdsMessage);
+    QObject::connect(Dcm::instance(), &Dcm::sendUdsResponse,
+                     CanTp::instance(), &CanTp::sendMessage);
+
+    // E2E 校验错误 → DEM 故障上报
+    QObject::connect(Com::instance(), &Com::e2eError,
+                     Dem::instance(), [](uint32_t canId, const QString &reason) {
+                         Q_UNUSED(canId)
+                         Q_UNUSED(reason)
+                         Dem::instance()->reportEvent(DTC_E2E_ERROR,
+                             DTC_STATUS_TEST_FAILED | DTC_STATUS_CONFIRMED_DTC);
+                     });
+
+    // EC20 4G 模块
     EC20Manager::instance()->init();
 
     MainWindow mainWindow;

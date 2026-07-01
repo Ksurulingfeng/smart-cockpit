@@ -16,6 +16,41 @@
 extern "C" {
 #endif
 
+/* ==================== E2E Profile 定义 ==================== */
+#define E2E_PROFILE_NONE      0   // 无校验（控制帧）
+#define E2E_PROFILE_COUNTER   1   // 仅滚动计数器（传感器帧）
+#define E2E_PROFILE_CRC8      2   // 计数器 + CRC-8（预留）
+
+/* ==================== UDS DID (ISO 14229-1) ==================== */
+#define DID_ECU_SERIAL          0xF100
+#define DID_VIN_NUMBER          0xF190
+#define DID_SOFTWARE_VERSION    0xF1A0
+#define DID_BUS_LOAD            0xF1B0
+#define DID_NODE_A_TEC          0xF1B1
+#define DID_NODE_A_REC          0xF1B2
+#define DID_NODE_A_TX_COUNT     0xF1B3
+#define DID_NODE_B_TEC          0xF1C1
+#define DID_NODE_B_REC          0xF1C2
+#define DID_NODE_B_TX_COUNT     0xF1C3
+
+/* ==================== UDS CAN ID (ISO 15765-2) ==================== */
+#define CAN_ID_UDS_REQUEST                       0x7E0
+#define CAN_ID_UDS_RESPONSE                      0x7E8
+
+/* ==================== UDS NRC ==================== */
+#define NRC_SERVICE_NOT_SUPPORTED     0x11
+#define NRC_SUBFUNCTION_NOT_SUPPORTED 0x12
+#define NRC_REQUEST_OUT_OF_RANGE      0x31
+#define NRC_CONDITIONS_NOT_CORRECT    0x22
+
+/* ==================== DTC 故障码 (ISO 15031-6, 3字节) ==================== */
+#define DTC_BUS_OFF_ERROR       0xC00100
+#define DTC_NODE_A_TIMEOUT      0xC00200
+#define DTC_NODE_B_TIMEOUT      0xC00300
+#define DTC_CAN_OVERFLOW        0xC00400
+#define DTC_FRAME_LOST          0xC00500
+#define DTC_E2E_ERROR           0xC00600
+
 /* ==================== 信号 ID 枚举 ==================== */
 
 typedef enum {
@@ -59,34 +94,38 @@ typedef struct {
     uint8_t     bit_length;         // 信号位宽 (8/16)
     uint8_t     is_signed;          // 0=unsigned, 1=signed
     uint8_t     has_flags;          // 1=此帧有 flags 字节 byte0
+    uint8_t     e2e_profile;        // E2E_PROFILE_NONE / COUNTER / CRC8
 } SignalDesc_t;
 
 /* 信号描述符表——由 COM 层内部使用, 编译期常量 */
 static const SignalDesc_t g_signal_desc[SID_COUNT] = {
-    { SID_A_BUZZER_MODE,       CAN_ID_A_BUZZER_CTRL,       0, 8, 0, 0 },
-    { SID_A_LED_STATE,         CAN_ID_A_LED_CTRL,          0, 8, 0, 0 },
-    { SID_B_FAN_TARGET,        CAN_ID_B_FAN_TARGET_SPEED,  0, 8, 0, 0 },
-    { SID_B_WINDOW_TARGET,     CAN_ID_B_WINDOW_TARGET_POS, 0, 8, 0, 0 },
-    { SID_B_BUZZER_MODE,       CAN_ID_B_BUZZER_CTRL,       0, 8, 0, 0 },
-    { SID_B_LED_STATE,         CAN_ID_B_LED_CTRL,          0, 8, 0, 0 },
+    // 控制帧 — 无 flags, 无 E2E 校验
+    { SID_A_BUZZER_MODE,       CAN_ID_A_BUZZER_CTRL,       0, 8, 0, 0, E2E_PROFILE_NONE },
+    { SID_A_LED_STATE,         CAN_ID_A_LED_CTRL,          0, 8, 0, 0, E2E_PROFILE_NONE },
+    { SID_B_FAN_TARGET,        CAN_ID_B_FAN_TARGET_SPEED,  0, 8, 0, 0, E2E_PROFILE_NONE },
+    { SID_B_WINDOW_TARGET,     CAN_ID_B_WINDOW_TARGET_POS, 0, 8, 0, 0, E2E_PROFILE_NONE },
+    { SID_B_BUZZER_MODE,       CAN_ID_B_BUZZER_CTRL,       0, 8, 0, 0, E2E_PROFILE_NONE },
+    { SID_B_LED_STATE,         CAN_ID_B_LED_CTRL,          0, 8, 0, 0, E2E_PROFILE_NONE },
 
-    { SID_FLAGS_ULTRASONIC,    CAN_ID_A_ULTRASONIC,        0, 8, 0, 1 },
-    { SID_FLAGS_GEAR,          CAN_ID_A_GEAR,              0, 8, 0, 1 },
-    { SID_FLAGS_FUEL,          CAN_ID_A_FUEL,              0, 8, 0, 1 },
-    { SID_FLAGS_RPM,           CAN_ID_A_RPM,               0, 8, 0, 1 },
-    { SID_FLAGS_TEMPERATURE,   CAN_ID_B_TEMPERATURE,       0, 8, 0, 1 },
-    { SID_FLAGS_HUMIDITY,      CAN_ID_B_HUMIDITY,          0, 8, 0, 1 },
-    { SID_FLAGS_FAN_ACTUAL,    CAN_ID_B_FAN_SPEED_ACTUAL,  0, 8, 0, 1 },
-    { SID_FLAGS_WINDOW_ACTUAL, CAN_ID_B_WINDOW_POS_ACTUAL, 0, 8, 0, 1 },
+    // 传感器帧 flags 字节 — 自己是 E2E 载体
+    { SID_FLAGS_ULTRASONIC,    CAN_ID_A_ULTRASONIC,        0, 8, 0, 1, E2E_PROFILE_COUNTER },
+    { SID_FLAGS_GEAR,          CAN_ID_A_GEAR,              0, 8, 0, 1, E2E_PROFILE_COUNTER },
+    { SID_FLAGS_FUEL,          CAN_ID_A_FUEL,              0, 8, 0, 1, E2E_PROFILE_COUNTER },
+    { SID_FLAGS_RPM,           CAN_ID_A_RPM,               0, 8, 0, 1, E2E_PROFILE_COUNTER },
+    { SID_FLAGS_TEMPERATURE,   CAN_ID_B_TEMPERATURE,       0, 8, 0, 1, E2E_PROFILE_COUNTER },
+    { SID_FLAGS_HUMIDITY,      CAN_ID_B_HUMIDITY,          0, 8, 0, 1, E2E_PROFILE_COUNTER },
+    { SID_FLAGS_FAN_ACTUAL,    CAN_ID_B_FAN_SPEED_ACTUAL,  0, 8, 0, 1, E2E_PROFILE_COUNTER },
+    { SID_FLAGS_WINDOW_ACTUAL, CAN_ID_B_WINDOW_POS_ACTUAL, 0, 8, 0, 1, E2E_PROFILE_COUNTER },
 
-    { SID_DISTANCE_CM,         CAN_ID_A_ULTRASONIC,        1, 16, 0, 0 },
-    { SID_GEAR,                CAN_ID_A_GEAR,              1, 8,  0, 0 },
-    { SID_FUEL_PERCENT_X10,    CAN_ID_A_FUEL,              1, 16, 0, 0 },
-    { SID_RPM_PERCENT_X10,     CAN_ID_A_RPM,               1, 16, 0, 0 },
-    { SID_TEMPERATURE_X10,     CAN_ID_B_TEMPERATURE,       1, 16, 1, 0 },
-    { SID_HUMIDITY_X10,        CAN_ID_B_HUMIDITY,          1, 16, 0, 0 },
-    { SID_FAN_ACTUAL_SPEED,    CAN_ID_B_FAN_SPEED_ACTUAL,  1, 8,  0, 0 },
-    { SID_WINDOW_ACTUAL_POS,   CAN_ID_B_WINDOW_POS_ACTUAL, 1, 8,  0, 0 },
+    // 传感器帧数据字段 — 与 flags 同帧，共享 E2E
+    { SID_DISTANCE_CM,         CAN_ID_A_ULTRASONIC,        1, 16, 0, 0, E2E_PROFILE_COUNTER },
+    { SID_GEAR,                CAN_ID_A_GEAR,              1, 8,  0, 0, E2E_PROFILE_COUNTER },
+    { SID_FUEL_PERCENT_X10,    CAN_ID_A_FUEL,              1, 16, 0, 0, E2E_PROFILE_COUNTER },
+    { SID_RPM_PERCENT_X10,     CAN_ID_A_RPM,               1, 16, 0, 0, E2E_PROFILE_COUNTER },
+    { SID_TEMPERATURE_X10,     CAN_ID_B_TEMPERATURE,       1, 16, 1, 0, E2E_PROFILE_COUNTER },
+    { SID_HUMIDITY_X10,        CAN_ID_B_HUMIDITY,          1, 16, 0, 0, E2E_PROFILE_COUNTER },
+    { SID_FAN_ACTUAL_SPEED,    CAN_ID_B_FAN_SPEED_ACTUAL,  1, 8,  0, 0, E2E_PROFILE_COUNTER },
+    { SID_WINDOW_ACTUAL_POS,   CAN_ID_B_WINDOW_POS_ACTUAL, 1, 8,  0, 0, E2E_PROFILE_COUNTER },
 };
 
 /* COM 层接口 */

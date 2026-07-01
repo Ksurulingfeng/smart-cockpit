@@ -35,13 +35,18 @@ signals:
 
 private slots:
     void mockTick();
+    // Com 层统一解包后的信号 → 路由到 typed Qt 信号
+    void onSignalUpdated(SignalId_t id, uint32_t value);
 
 private:
     explicit Rte(QObject *parent = nullptr);
     ~Rte() override = default;
 
-    void onCanFrame(uint32_t canId, const uint8_t *data, uint8_t len);
+    // 心跳检测：仅刷新节点计时器，不解包数据
+    void refreshNodeTimer(uint32_t canId);
     void checkNodes();
+
+    static int rpmToSpeed(int rpmX10);
 
     Mode m_mode = MOCK;
     QTimer *m_mockTimer = nullptr;
