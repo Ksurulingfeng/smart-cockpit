@@ -68,27 +68,70 @@ ID 分配方案：`bit[10:8]=node, bit[7]=dir(0=control优先), bit[6:0]=signal`
 
 ## 快速开始
 
-### stm32_can_node
+### 克隆仓库
 
 ```bash
-# VS Code + EIDE 插件打开 stm32_can_node/
-# Ctrl+Shift+B 构建 → EIDE 任务烧录
+git clone https://github.com/Ksurulingfeng/smart-cockpit.git
+cd smart_cockpit
 ```
 
-### vehicle-terminal
+> **注意**：两个子项目编译平台不同——`stm32_can_node` 在 **Windows** 下编译（Keil MDK），`vehicle-terminal` 在 **Ubuntu** 下编译（CMake + Qt）。建议 Windows 负责 STM32 固件开发，Ubuntu（物理机或 WSL2）负责 Qt 终端开发。
+
+### stm32_can_node（Windows）
+
+**环境要求**：
+- Windows 10/11
+- [Keil MDK-ARM](https://www.keil.com/download/product/)（ARM Compiler 6）
+- VS Code + [EIDE 插件](https://marketplace.visualstudio.com/items?itemName=CL.eide)
+- CMSIS-DAP 调试器（烧录用）
+
+**构建与烧录**：
 
 ```bash
+# 1. VS Code 打开 stm32_can_node/ 目录
+# 2. 选择编译目标: NODE_A 或 NODE_B
+#    修改 build/stm32_can_node/builder.params 中的宏定义
+# 3. Ctrl+Shift+B → 执行 eide.project.build 构建
+# 4. 执行 eide.project.uploadToDevice 烧录
+```
+
+> 详见 [stm32_can_node/README.md](stm32_can_node/README.md)
+
+### vehicle-terminal（Ubuntu）
+
+**环境要求**：
+- Ubuntu 20.04+（x86 本地开发）或 ARM Linux 开发板（部署目标）
+- Qt 5.15+（Widgets / SerialBus / VirtualKeyboard / Network / SerialPort / Multimedia）
+- CMake 3.10+ + Ninja
+- 可选：vcan0 虚拟 CAN（无硬件时调试）
+
+```bash
+# 安装依赖（Ubuntu）
+sudo apt install build-essential cmake ninja-build \
+    qtbase5-dev qt5serialbus-dev libqt5virtualkeyboard5-dev \
+    qtmultimedia5-dev libasound2-dev
+
+# 编译（x86 本地）
 cmake --preset x86-release
 cmake --build build/x86-release -- -j$(nproc)
+
+# 创建虚拟 CAN 接口（无硬件时）
+sudo modprobe vcan
+sudo ip link add dev vcan0 type vcan
+sudo ip link set up vcan0
+
+# 运行
 ./build/x86-release/vehicle-terminal
 ```
 
-### 代码生成
+> ARM 交叉编译 → SCP 部署流程详见 [ARM交叉编译与部署.md](docs/ARM交叉编译与部署.md)
+
+### 修改 CAN 协议
 
 ```bash
-# 编辑 tools/can_signals.json 后运行
+# 编辑 tools/can_signals.json → 运行脚本 → 两端重新编译
 python tools/dbc_generate_header.py
-# 输出: shared/can_protocol_common.h + tools/signal_id.h + .c + shared/smart_cockpit.dbc
+# 输出: shared/can_protocol_common.h + shared/smart_cockpit.dbc
 ```
 
 ## 软件分层
