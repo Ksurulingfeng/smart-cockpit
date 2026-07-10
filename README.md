@@ -179,22 +179,3 @@ COM 层   comlayer.h/cpp (Qt) / com_layer.c (STM32)      ← 信号↔CAN帧 双
 Driver   canmanager.cpp (SocketCAN) / can_drv.c (HAL)   ← 硬件抽象
 ```
 
-## 文档
-
-**入门**：
-- [CAN 总线入门指南](docs/CAN总线入门指南.md) — 零基础到理解本项目 CAN 设计
-- [AUTOSAR 入门指南](docs/AUTOSAR入门指南.md) — AUTOSAR 架构 + 本项目对照
-- [UDS 诊断协议入门](docs/UDS诊断协议入门.md) — ISO 14229-1 + STM32 端实现
-
-**技术深入**：
-- [FreeRTOS 实时操作系统实践](docs/FreeRTOS实时操作系统实践.md) — 7 任务架构 + ISR 通信模式
-- [COM 层信号系统设计详解](docs/COM层信号系统设计详解.md) — 描述符表 + 单缓冲 + 代码生成
-- [STM32 CAN 控制器实战](docs/STM32-CAN控制器实战.md) — 位定时 + 滤波器 + 错误管理
-- [车载 Qt 架构设计](docs/车载Qt架构设计.md) — 单例 + RTE + Mock 模式
-- [DBC 工具链实战](docs/DBC工具链实战.md) — DBC 结构 + cantools + SavvyCAN
-- [ARM 交叉编译与部署](docs/ARM交叉编译与部署.md) — CMakePresets + Yocto SDK + SCP
-
-**面试与总结**：
-- [面试准备与项目话术](docs/面试准备与项目话术.md) — 高频问题 + 回答模板 + 简历用
-- [CAN 总线企业级改造总结](docs/CAN总线企业级改造总结.md) — 完整改造过程 + 面试素材
-- [毕业论文](docs/毕业论文-基于CAN总线的分布式智能座舱系统设计与实现.md)
