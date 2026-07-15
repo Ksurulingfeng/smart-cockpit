@@ -1,7 +1,7 @@
 // COM层: 信号↔CAN帧打包/解包
 #include "sys.h"
 #include "task_headfile.h"
-#include "../../../shared/com_signal_defs.h"
+#include "can_protocol.h"
 #include "can_drv.h"
 #include "debug.h"
 
@@ -16,7 +16,6 @@ static uint8_t  g_rx_buf[8];
 static uint32_t g_rx_cid;
 static uint8_t  g_rx_dlc;
 
-// 初始化COM层
 void Com_Init(void)
 {
     g_tx_cid = 0xFFFFFFFF;
@@ -24,7 +23,6 @@ void Com_Init(void)
     g_tx_cnt = 0;
 }
 
-// 写入信号值到帧缓冲区
 int Com_SendSignal(SignalId_t id, uint32_t value)
 {
     const SignalDesc_t *desc = &g_signal_desc[id];
@@ -43,13 +41,11 @@ int Com_SendSignal(SignalId_t id, uint32_t value)
     return 0;
 }
 
-// 写入flags字节 (valid+counter)
 int Com_SendFlags(SignalId_t flags_id, uint8_t valid, uint8_t counter)
 {
     return Com_SendSignal(flags_id, CAN_MAKE_FLAGS(valid, counter));
 }
 
-// CAN 发送重试: 100次×50μs=5ms, 每10次 yield
 static HAL_StatusTypeDef send_with_retry(uint32_t id, uint8_t *data, uint8_t dlc)
 {
     HAL_StatusTypeDef ret = CAN_SendMessage(id, data, dlc);
@@ -61,7 +57,6 @@ static HAL_StatusTypeDef send_with_retry(uint32_t id, uint8_t *data, uint8_t dlc
     return ret;
 }
 
-// 发送当前帧并重置缓冲区
 int Com_Flush(void)
 {
     if (g_tx_dlc == 0) return -1;
@@ -75,14 +70,12 @@ int Com_Flush(void)
 
 uint16_t Com_GetTxCount(void) { return g_tx_cnt; }
 
-// 直接发送原始数据 (诊断帧使用)
 int Com_SendRaw(uint32_t can_id, const uint8_t *data, uint8_t dlc)
 {
     g_tx_cnt++;
     return send_with_retry(can_id, (uint8_t *)data, dlc) == HAL_OK ? 0 : -1;
 }
 
-// 接收帧→存入接收上下文
 void Com_ReceiveFrame(uint32_t can_id, const uint8_t *data, uint8_t dlc)
 {
     g_rx_cid = can_id;
@@ -91,7 +84,6 @@ void Com_ReceiveFrame(uint32_t can_id, const uint8_t *data, uint8_t dlc)
         g_rx_buf[i] = data[i];
 }
 
-// 从接收帧按描述符提取信号 (含符号扩展)
 uint32_t Com_ReceiveSignal(SignalId_t id)
 {
     const SignalDesc_t *desc = &g_signal_desc[id];
@@ -104,5 +96,5 @@ uint32_t Com_ReceiveSignal(SignalId_t id)
             return (uint32_t)(int32_t)(int16_t)val;
         return val;
     }
-    return g_rx_buf[desc->byte_offset]; // 8-bit
+    return g_rx_buf[desc->byte_offset];
 }

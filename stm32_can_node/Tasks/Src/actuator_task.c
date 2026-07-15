@@ -6,10 +6,8 @@
 #include "led_drv.h"
 #include "motor_drv.h"
 #include "servo_drv.h"
+#include "rte.h"
 #include "debug.h"
-
-uint8_t g_fan_actual_speed = 0;
-uint8_t g_window_actual_pos = 0;
 
 // 队列命令（对外协议）
 typedef enum {
@@ -102,7 +100,7 @@ void vActuatorTask(void *pvParameters)
         // 风扇
         if (xQueueReceive(xFanQueue, &cmd, 0) == pdTRUE) {
             Motor_SetSpeed(cmd);
-            g_fan_actual_speed = cmd;
+            Rte_Write(SID_FAN_ACTUAL_SPEED, cmd);
         }
 
         if (xQueueReceive(xWindowQueue, &cmd, 0) == pdTRUE) {
@@ -110,7 +108,7 @@ void vActuatorTask(void *pvParameters)
             if (angle > 180.0f) angle = 180.0f;
             if (angle < 0.0f) angle = 0.0f;
             Servo_SetAngle(angle);
-            g_window_actual_pos = cmd;
+            Rte_Write(SID_WINDOW_ACTUAL_POS, cmd);
         }
 
         // LED

@@ -3,6 +3,7 @@
 #include "task_config.h"
 #include "oled_i2c_drv.h"
 #include "key_drv.h"
+#include "rte.h"
 #include "debug.h"
 #include <stdio.h>
 
@@ -32,16 +33,16 @@ void vDisplayTask(void *pvParameters)
             }
         }
         if (page == 0) {
-            sprintf(text, "温度:%.1f℃ ", g_temperature);
+            sprintf(text, "温度:%.1f℃ ", Rte_Read(SID_TEMPERATURE_X10) / 10.0f);
             OLED_ShowText(0, 2, text, OLED_SIZE_8x16, OLED_MODE_NORMAL);
-            sprintf(text, "湿度:%.1f%%  ", g_humidity);
+            sprintf(text, "湿度:%.1f%%  ", Rte_Read(SID_HUMIDITY_X10) / 10.0f);
             OLED_ShowText(0, 4, text, OLED_SIZE_8x16, OLED_MODE_NORMAL);
         } else if (page == 1) {
-            sprintf(text, "转速:%.1f%%    ", g_rpm_percent);
+            sprintf(text, "转速:%.1f%%    ", Rte_Read(SID_RPM_PERCENT_X10) / 10.0f);
             OLED_ShowText(0, 2, text, OLED_SIZE_8x16, OLED_MODE_NORMAL);
-            sprintf(text, "油量:%.1f%%    ", g_fuel_percent);
+            sprintf(text, "油量:%.1f%%    ", Rte_Read(SID_FUEL_PERCENT_X10) / 10.0f);
             OLED_ShowText(0, 4, text, OLED_SIZE_8x16, OLED_MODE_NORMAL);
-            sprintf(text, "距离:%.1fcm ", g_distance);
+            sprintf(text, "距离:%.1fcm ", (float)Rte_Read(SID_DISTANCE_CM));
             OLED_ShowText(0, 6, text, OLED_SIZE_8x16, OLED_MODE_NORMAL);
         }
 

@@ -3,6 +3,7 @@
 #include "task_config.h"
 #include "can_protocol.h"
 #include "can_drv.h"
+#include "rte.h"
 #include "dht11_drv.h"
 #include "led_drv.h"
 #include "motor_drv.h"
@@ -51,6 +52,10 @@ void System_Init(void)
     Ultrasonic_Init();
 
     debug_printf("系统初始化完成！\r\n");
+
+    /* ========== 平台服务初始化 ========== */
+    Rte_Init();
+    Com_Init();
 
     /* ========== 创建队列 ========== */
     xCanRxQueue  = xQueueCreate(10, sizeof(CanRxMsg_t));

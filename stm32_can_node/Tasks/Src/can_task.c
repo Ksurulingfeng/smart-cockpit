@@ -4,12 +4,9 @@
 #include "can_drv.h"
 #include "can_protocol.h"
 #include "uds_handler.h"
+#include "rte.h"
 #include "debug.h"
 #include <string.h>
-
-uint8_t g_ultrasonic_valid  = 0;
-uint8_t g_temperature_valid = 0;
-uint8_t g_humidity_valid    = 0;
 
 volatile uint8_t g_can_error_state = 0;
 volatile uint16_t g_can_tec        = 0;
@@ -71,23 +68,23 @@ static void send_node_a_data(void)
         count_data = 0;
 
         /* SWC: 超声波 */
-        Com_SendFlags(SID_FLAGS_ULTRASONIC, g_ultrasonic_valid, next_counter(&g_rc_ultrasonic));
-        Com_SendSignal(SID_DISTANCE_CM, (uint16_t)(g_distance > 0.0f ? g_distance : 0.0f));
+        Com_SendFlags(SID_FLAGS_ULTRASONIC, Rte_IsValid(SID_FLAGS_ULTRASONIC), next_counter(&g_rc_ultrasonic));
+        Com_SendSignal(SID_DISTANCE_CM, (uint16_t)Rte_Read(SID_DISTANCE_CM));
         Com_Flush();
 
         /* SWC: 档位 */
         Com_SendFlags(SID_FLAGS_GEAR, 1, next_counter(&g_rc_gear));
-        Com_SendSignal(SID_GEAR, g_gear);
+        Com_SendSignal(SID_GEAR, Rte_Read(SID_GEAR));
         Com_Flush();
 
         /* SWC: 油量 */
         Com_SendFlags(SID_FLAGS_FUEL, 1, next_counter(&g_rc_fuel));
-        Com_SendSignal(SID_FUEL_PERCENT_X10, (uint16_t)(g_fuel_percent * 10));
+        Com_SendSignal(SID_FUEL_PERCENT_X10, (uint16_t)Rte_Read(SID_FUEL_PERCENT_X10));
         Com_Flush();
 
         /* SWC: 转速 */
         Com_SendFlags(SID_FLAGS_RPM, 1, next_counter(&g_rc_rpm));
-        Com_SendSignal(SID_RPM_PERCENT_X10, (uint16_t)(g_rpm_percent * 10));
+        Com_SendSignal(SID_RPM_PERCENT_X10, (uint16_t)Rte_Read(SID_RPM_PERCENT_X10));
         Com_Flush();
     }
 
@@ -130,23 +127,23 @@ static void send_node_b_data(void)
         count_data = 0;
 
         /* SWC: 温度 */
-        Com_SendFlags(SID_FLAGS_TEMPERATURE, g_temperature_valid, next_counter(&g_rc_temp));
-        Com_SendSignal(SID_TEMPERATURE_X10, (int16_t)(g_temperature * 10));
+        Com_SendFlags(SID_FLAGS_TEMPERATURE, Rte_IsValid(SID_FLAGS_TEMPERATURE), next_counter(&g_rc_temp));
+        Com_SendSignal(SID_TEMPERATURE_X10, (int16_t)Rte_Read(SID_TEMPERATURE_X10));
         Com_Flush();
 
         /* SWC: 湿度 */
-        Com_SendFlags(SID_FLAGS_HUMIDITY, g_humidity_valid, next_counter(&g_rc_hum));
-        Com_SendSignal(SID_HUMIDITY_X10, (uint16_t)(g_humidity * 10));
+        Com_SendFlags(SID_FLAGS_HUMIDITY, Rte_IsValid(SID_FLAGS_HUMIDITY), next_counter(&g_rc_hum));
+        Com_SendSignal(SID_HUMIDITY_X10, (uint16_t)Rte_Read(SID_HUMIDITY_X10));
         Com_Flush();
 
         /* SWC: 风扇实际反馈 */
         Com_SendFlags(SID_FLAGS_FAN_ACTUAL, 1, next_counter(&g_rc_fan));
-        Com_SendSignal(SID_FAN_ACTUAL_SPEED, g_fan_actual_speed);
+        Com_SendSignal(SID_FAN_ACTUAL_SPEED, (uint8_t)Rte_Read(SID_FAN_ACTUAL_SPEED));
         Com_Flush();
 
         /* SWC: 车窗实际反馈 */
         Com_SendFlags(SID_FLAGS_WINDOW_ACTUAL, 1, next_counter(&g_rc_win));
-        Com_SendSignal(SID_WINDOW_ACTUAL_POS, g_window_actual_pos);
+        Com_SendSignal(SID_WINDOW_ACTUAL_POS, (uint8_t)Rte_Read(SID_WINDOW_ACTUAL_POS));
         Com_Flush();
     }
 
@@ -191,7 +188,6 @@ static void process_rx_command(uint32_t id, uint8_t *data, uint8_t len)
 void vCanTask(void *pvParameters)
 {
     CAN_RegisterRxCallback(can_rx_callback);
-    Com_Init();
 
     TickType_t xLastWakeTime = xTaskGetTickCount();
     for (;;) {

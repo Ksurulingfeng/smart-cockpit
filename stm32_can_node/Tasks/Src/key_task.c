@@ -2,8 +2,7 @@
 #include "task_headfile.h"
 #include "task_config.h"
 #include "key_drv.h"
-
-uint8_t g_gear = GEAR_NONE;
+#include "rte.h"
 
 void vKeyTask(void *pvParameters)
 {
@@ -43,7 +42,7 @@ void vKeyTask(void *pvParameters)
             if (gear_cnt == 3 && gear != GEAR_NONE) {
                 if (gear != gear_sent) {
                     gear_sent = gear;
-                    g_gear    = gear;
+                    Rte_Write(SID_GEAR, gear);
                 }
             }
         } else {

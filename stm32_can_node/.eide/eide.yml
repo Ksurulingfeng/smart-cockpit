@@ -89,7 +89,9 @@ virtualFolder:
     - name: Middleware
       files:
         - path: Middleware/Src/debug.c
-        - path: Middleware/Src/MyI2C.c
+        - path: Middleware/Src/myi2c.c
+        - path: Middleware/Src/rte.c
+        - path: Middleware/Src/com.c
       folders: []
     - name: Tasks
       files:
@@ -100,7 +102,6 @@ virtualFolder:
         - path: Tasks/Src/humiture_task.c
         - path: Tasks/Src/ultrasonic_task.c
         - path: Tasks/Src/actuator_task.c
-        - path: Tasks/Src/com_layer.c
         - path: Tasks/Src/uds_handler.c
       folders: []
     - name: Config

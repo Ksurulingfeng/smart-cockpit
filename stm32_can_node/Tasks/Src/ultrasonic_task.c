@@ -2,9 +2,8 @@
 #include "task_headfile.h"
 #include "task_config.h"
 #include "ultrasonic_drv.h"
+#include "rte.h"
 #include "debug.h"
-
-float g_distance = 0.0f;
 
 void vUltrasonicTask(void *pvParameters)
 {
@@ -17,16 +16,16 @@ void vUltrasonicTask(void *pvParameters)
         if (notif > 0) {
             float dist = Ultrasonic_GetDistance();
             if (dist >= 2.0f && dist <= ULTRANSONIC_MAX_DISTANCE_CM) {
-                g_distance         = dist;
-                last_valid         = dist;
-                g_ultrasonic_valid = 1;
+                last_valid = dist;
+                Rte_Write(SID_DISTANCE_CM, (uint32_t)dist);
+                Rte_SetValid(SID_FLAGS_ULTRASONIC, 1);
             } else {
-                g_distance         = last_valid;
-                g_ultrasonic_valid = 0;
+                Rte_Write(SID_DISTANCE_CM, (uint32_t)last_valid);
+                Rte_SetValid(SID_FLAGS_ULTRASONIC, 0);
             }
         } else {
-            g_distance         = last_valid;
-            g_ultrasonic_valid = 0;
+            Rte_Write(SID_DISTANCE_CM, (uint32_t)last_valid);
+            Rte_SetValid(SID_FLAGS_ULTRASONIC, 0);
         }
         vTaskDelay(pdMS_TO_TICKS(TASK_CYCLE_ULTRASONIC));
     }
