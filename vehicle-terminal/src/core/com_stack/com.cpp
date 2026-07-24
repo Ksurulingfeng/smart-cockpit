@@ -92,7 +92,7 @@ void Com::unpackAndEmit(uint32_t canId, const uint8_t *data)
 void Com::receiveFrame(uint32_t canId, const uint8_t *data, uint8_t len)
 {
     // ---- 诊断帧 (0x300) 特殊处理 ----
-    if (canId == CAN_ID_DIAGNOSTIC) {
+    if (canId == CAN_ID_ECU_DIAGREPORT) {
         if (len >= 8) {
             uint16_t tec      = (uint16_t)data[1] | ((uint16_t)data[2] << 8);
             uint16_t rec      = (uint16_t)data[3] | ((uint16_t)data[4] << 8);

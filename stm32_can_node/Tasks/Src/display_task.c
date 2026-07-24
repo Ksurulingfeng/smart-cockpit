@@ -15,9 +15,9 @@ void vDisplayTask(void *pvParameters)
     OLED_Clear();
 #ifdef NODE_A
     page = 1;
-    OLED_ShowText(0, 0, "     节点A   ", OLED_SIZE_8x16, OLED_MODE_NORMAL);
+    OLED_ShowText(0, 0, "     PCM   ", OLED_SIZE_8x16, OLED_MODE_NORMAL);
 #elif defined(NODE_B)
-    OLED_ShowText(0, 0, "     节点B   ", OLED_SIZE_8x16, OLED_MODE_NORMAL);
+    OLED_ShowText(0, 0, "     BCM   ", OLED_SIZE_8x16, OLED_MODE_NORMAL);
 #endif
 
     uint8_t key;

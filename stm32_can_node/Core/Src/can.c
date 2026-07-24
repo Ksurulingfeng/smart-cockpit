@@ -66,11 +66,11 @@ void MX_CAN_Init(void)
     filter.FilterFIFOAssignment = CAN_RX_FIFO0;
     filter.FilterActivation = ENABLE;
 #ifdef NODE_A
-    // 节点A只接收 0x080-0x081 (主控→A, bit7=0→控制优先)
+    // PCM 只接收 0x080-0x081 (HMI→PCM 控制)
     filter.FilterIdHigh = (0x080 << 5);
     filter.FilterMaskIdHigh = (0x7FE << 5);
 #else
-    // 节点B只接收 0x100-0x103 (主控→B)
+    // BCM 只接收 0x100-0x103 (HMI→BCM 控制)
     filter.FilterIdHigh = (0x100 << 5);
     filter.FilterMaskIdHigh = (0x7FC << 5);
 #endif

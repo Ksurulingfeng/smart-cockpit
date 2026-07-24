@@ -10,82 +10,83 @@ NS_ :
 
 BS_: 250000
 
-BU_: NodeA NodeB Master
+BU_: PCM BCM All_ECUs HMI
 
-BO_ 128 A_Buzzer_Ctrl: 1 Master
- SG_ Mode : 0|8@1+ (1,0) [0|3] "" Master
+BO_ 128 PCM_BuzzerCmd: 1 HMI
+ SG_ BuzzerMode : 0|8@1+ (1,0) [0|3] "" HMI
 
-BO_ 129 A_LED_Ctrl: 1 Master
- SG_ State : 0|8@1+ (1,0) [0|3] "" Master
+BO_ 129 PCM_LEDStateCmd: 1 HMI
+ SG_ LED_State : 0|8@1+ (1,0) [0|3] "" HMI
 
-BO_ 256 B_Fan_Target_Speed: 1 Master
- SG_ Target_Speed : 0|8@1+ (1,0) [0|100] "%" Master
+BO_ 256 BCM_FanTarget: 1 HMI
+ SG_ FanTargetSpeed : 0|8@1+ (1,0) [0|100] "%" HMI
 
-BO_ 257 B_Window_Target_Pos: 1 Master
- SG_ Target_Pos : 0|8@1+ (1,0) [0|100] "%" Master
+BO_ 257 BCM_WindowTarget: 1 HMI
+ SG_ WindowTargetPos : 0|8@1+ (1,0) [0|100] "%" HMI
 
-BO_ 258 B_Buzzer_Ctrl: 1 Master
- SG_ Mode : 0|8@1+ (1,0) [0|3] "" Master
+BO_ 258 BCM_BuzzerCmd: 1 HMI
+ SG_ BuzzerMode : 0|8@1+ (1,0) [0|3] "" HMI
 
-BO_ 259 B_LED_Ctrl: 1 Master
- SG_ State : 0|8@1+ (1,0) [0|3] "" Master
+BO_ 259 BCM_LEDStateCmd: 1 HMI
+ SG_ LED_State : 0|8@1+ (1,0) [0|3] "" HMI
 
-BO_ 384 A_Ultrasonic: 3 NodeA
- SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
- SG_ Distance_cm : 8|16@1+ (1,0) [0|400] "cm" Master
+BO_ 384 PCM_ParkingDistance: 3 PCM
+ SG_ UltrasonicFlags : 0|8@1+ (1,0) [0|255] "" HMI
+ SG_ ParkingDistance : 8|16@1+ (1,0) [0|400] "cm" HMI
 
-BO_ 385 A_Gear: 2 NodeA
- SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
- SG_ Gear : 8|8@1+ (1,0) [0|2] "" Master
+BO_ 385 PCM_GearPosition: 2 PCM
+ SG_ GearFlags : 0|8@1+ (1,0) [0|255] "" HMI
+ SG_ GearPosition : 8|8@1+ (1,0) [0|2] "" HMI
 
-BO_ 386 A_Fuel: 3 NodeA
- SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
- SG_ Fuel_Percent_x10 : 8|16@1+ (0.1,0) [0|1000] "%" Master
+BO_ 386 PCM_FuelLevel: 3 PCM
+ SG_ FuelFlags : 0|8@1+ (1,0) [0|255] "" HMI
+ SG_ FuelLevel : 8|16@1+ (0.1,0) [0|1000] "%" HMI
 
-BO_ 387 A_Rpm: 3 NodeA
- SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
- SG_ Rpm_Percent_x10 : 8|16@1+ (0.1,0) [0|1000] "%" Master
+BO_ 387 PCM_EngineSpeed: 3 PCM
+ SG_ RPM_Flags : 0|8@1+ (1,0) [0|255] "" HMI
+ SG_ EngineSpeed : 8|16@1+ (0.1,0) [0|1000] "%" HMI
 
-BO_ 512 B_Temperature: 3 NodeB
- SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
- SG_ Temperature_x10 : 8|16@1+ (0.1,0) [-400|850] "degC" Master
+BO_ 512 BCM_CabinTemperature: 3 BCM
+ SG_ TempFlags : 0|8@1+ (1,0) [0|255] "" HMI
+ SG_ CabinTemperature : 8|16@1+ (0.1,0) [-400|850] "degC" HMI
 
-BO_ 513 B_Humidity: 3 NodeB
- SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
- SG_ Humidity_x10 : 8|16@1+ (0.1,0) [0|1000] "%" Master
+BO_ 513 BCM_CabinHumidity: 3 BCM
+ SG_ HumidFlags : 0|8@1+ (1,0) [0|255] "" HMI
+ SG_ CabinHumidity : 8|16@1+ (0.1,0) [0|1000] "%" HMI
 
-BO_ 514 B_Fan_Speed_Actual: 2 NodeB
- SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
- SG_ Actual_Speed : 8|8@1+ (1,0) [0|100] "%" Master
+BO_ 514 BCM_FanActualSpeed: 2 BCM
+ SG_ FanFlags : 0|8@1+ (1,0) [0|255] "" HMI
+ SG_ FanActualSpeed : 8|8@1+ (1,0) [0|100] "%" HMI
 
-BO_ 515 B_Window_Pos_Actual: 2 NodeB
- SG_ Flags : 0|8@1+ (1,0) [0|255] "" Master
- SG_ Actual_Pos : 8|8@1+ (1,0) [0|100] "%" Master
+BO_ 515 BCM_WindowActualPos: 2 BCM
+ SG_ WindowFlags : 0|8@1+ (1,0) [0|255] "" HMI
+ SG_ WindowActualPos : 8|8@1+ (1,0) [0|100] "%" HMI
 
-BO_ 768 Diagnostic: 8 NodeA
- SG_ Header : 0|8@1+ (1,0) [0|255] "" Master
- SG_ TEC : 8|16@1+ (1,0) [0|255] "" Master
- SG_ REC : 24|16@1+ (1,0) [0|255] "" Master
- SG_ TX_Msg_Count : 40|16@1+ (1,0) [0|65535] "" Master
- SG_ Bus_Load : 56|8@1+ (1,0) [0|100] "%" Master
+BO_ 768 ECU_DiagReport: 8 All_ECUs
+ SG_ DiagHeader : 0|8@1+ (1,0) [0|255] "" HMI
+ SG_ TEC_Counter : 8|16@1+ (1,0) [0|255] "" HMI
+ SG_ REC_Counter : 24|16@1+ (1,0) [0|255] "" HMI
+ SG_ TX_MessageCount : 40|16@1+ (1,0) [0|65535] "" HMI
+ SG_ BusLoadPercent : 56|8@1+ (1,0) [0|100] "%" HMI
 
-CM_ BO_ 128 "A_Buzzer_Ctrl";
-CM_ BO_ 129 "A_LED_Ctrl";
-CM_ BO_ 256 "B_Fan_Target_Speed";
-CM_ BO_ 257 "B_Window_Target_Pos";
-CM_ BO_ 258 "B_Buzzer_Ctrl";
-CM_ BO_ 259 "B_LED_Ctrl";
-CM_ BO_ 384 "A_Ultrasonic";
-CM_ BO_ 385 "A_Gear";
-CM_ BO_ 386 "A_Fuel";
-CM_ BO_ 387 "A_Rpm";
-CM_ BO_ 512 "B_Temperature";
-CM_ BO_ 513 "B_Humidity";
-CM_ BO_ 514 "B_Fan_Speed_Actual";
-CM_ BO_ 515 "B_Window_Pos_Actual";
-CM_ BO_ 768 "Diagnostic";
-VAL_ 385 Gear 0 "P" 1 "R" 2 "D" ;
-VAL_ 128 Mode 0 "OFF" 3 "ALERT" ;
-VAL_ 258 Mode 0 "OFF" 3 "ALERT" ;
-VAL_ 129 State 0 "OFF" 3 "ALERT" ;
-VAL_ 259 State 0 "OFF" 3 "ALERT" ;
+CM_ BO_ 128 "PCM_BuzzerCmd";
+CM_ BO_ 129 "PCM_LEDStateCmd";
+CM_ BO_ 256 "BCM_FanTarget";
+CM_ BO_ 257 "BCM_WindowTarget";
+CM_ BO_ 258 "BCM_BuzzerCmd";
+CM_ BO_ 259 "BCM_LEDStateCmd";
+CM_ BO_ 384 "PCM_ParkingDistance";
+CM_ BO_ 385 "PCM_GearPosition";
+CM_ BO_ 386 "PCM_FuelLevel";
+CM_ BO_ 387 "PCM_EngineSpeed";
+CM_ BO_ 512 "BCM_CabinTemperature";
+CM_ BO_ 513 "BCM_CabinHumidity";
+CM_ BO_ 514 "BCM_FanActualSpeed";
+CM_ BO_ 515 "BCM_WindowActualPos";
+CM_ BO_ 768 "ECU_DiagReport";
+VAL_ 385 GearPosition 0 "P" 1 "R" 2 "D" ;
+VAL_ 128 BuzzerMode 0 "OFF" 3 "ALERT" ;
+VAL_ 258 BuzzerMode 0 "OFF" 3 "ALERT" ;
+VAL_ 129 LED_State 0 "OFF" 3 "ALERT" ;
+VAL_ 259 LED_State 0 "OFF" 3 "ALERT" ;
+VAL_ 768 DiagHeader 0 "OK" 16 "Warning" 32 "ErrorPassive" 48 "BusOff" ;

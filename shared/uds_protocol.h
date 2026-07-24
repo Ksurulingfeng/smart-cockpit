@@ -1,5 +1,5 @@
 // Auto-generated from tools/can_signals.json
-// 2026-07-01 23:13:14
+// 2026-07-24 14:47:08
 
 #ifndef UDS_PROTOCOL_H
 #define UDS_PROTOCOL_H

@@ -132,7 +132,7 @@ def gen_dbc(config):
         for s in m['signals']:
             lines.append(
                 f' SG_ {s["name"]} : {s["start"]}|{s["length"]}@1+ '
-                f'({s["scale"]},{s["offset"]}) [{s["min"]}|{s["max"]}] "{s["unit"]}" Master'
+                f'({s["scale"]},{s["offset"]}) [{s["min"]}|{s["max"]}] "{s["unit"]}" HMI'
             )
         lines.append('')
 
@@ -172,7 +172,7 @@ def gen_signal_defs(config):
 
     all_signals = []
     for m in msgs:
-        if m['name'] == 'Diagnostic':
+        if m['name'] == 'ECU_DiagReport':
             continue
         for s in m['signals']:
             all_signals.append((m['id'], m['name'], s))

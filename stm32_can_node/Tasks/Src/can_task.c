@@ -45,20 +45,20 @@ static uint8_t next_counter(uint8_t *c)
 // 诊断帧上报: TEC/REC/总线负载, 每10s一次
 static void send_diag_report(uint8_t node_id)
 {
-    Diagnostic_t diag;
-    diag.Header       = (node_id << 4) | (g_can_error_state & 0x0F);
-    diag.TEC          = g_can_tec;
-    diag.REC          = g_can_rec;
-    diag.TX_Msg_Count = Com_GetTxCount();
-    diag.Bus_Load     = 0;
-    debug_printf("[DIAG] Node%c TEC=%d REC=%d State=%d TX=%d\r\n",
-                 node_id ? 'B' : 'A', diag.TEC, diag.REC, g_can_error_state, diag.TX_Msg_Count);
-    Com_SendRaw(CAN_ID_DIAGNOSTIC, (uint8_t *)&diag, sizeof(diag));
+    ECU_DiagReport_t diag;
+    diag.DiagHeader       = (node_id << 4) | (g_can_error_state & 0x0F);
+    diag.TEC_Counter          = g_can_tec;
+    diag.REC_Counter          = g_can_rec;
+    diag.TX_MessageCount = Com_GetTxCount();
+    diag.BusLoadPercent     = 0;
+    debug_printf("[DIAG] %s TEC=%d REC=%d State=%d TX=%d\r\n",
+                 node_id ? "BCM" : "PCM", diag.TEC_Counter, diag.REC_Counter, g_can_error_state, diag.TX_MessageCount);
+    Com_SendRaw(CAN_ID_ECU_DIAGREPORT, (uint8_t *)&diag, sizeof(diag));
 }
 
 #ifdef NODE_A
 
-// 节点A数据帧上报: 超声波/档位/油量/转速 @100ms
+// PCM 数据帧上报: 超声波/档位/油量/转速 @100ms
 static void send_node_a_data(void)
 {
     static uint8_t count_data  = 0;
@@ -104,11 +104,11 @@ static void process_rx_command(uint32_t id, uint8_t *data, uint8_t len)
         case CAN_ID_UDS_REQ_A:
             Uds_HandleRequest(data, len);
             break;
-        case CAN_ID_A_BUZZER_CTRL:
+        case CAN_ID_PCM_BUZZERCMD:
             val = (uint8_t)Com_ReceiveSignal(SID_A_BUZZER_MODE);
             xQueueSend(xBuzzerQueue, &val, pdMS_TO_TICKS(5));
             break;
-        case CAN_ID_A_LED_CTRL:
+        case CAN_ID_PCM_LEDSTATECMD:
             val = (uint8_t)Com_ReceiveSignal(SID_A_LED_STATE);
             xQueueSend(xLEDQueue, &val, pdMS_TO_TICKS(5));
             break;
@@ -117,7 +117,7 @@ static void process_rx_command(uint32_t id, uint8_t *data, uint8_t len)
 
 #elif defined(NODE_B)
 
-// 节点B数据帧上报: 温湿度+执行器反馈 @100ms
+// BCM 数据帧上报: 温湿度+执行器反馈 @100ms
 static void send_node_b_data(void)
 {
     static uint8_t count_data  = 0;
@@ -163,19 +163,19 @@ static void process_rx_command(uint32_t id, uint8_t *data, uint8_t len)
         case CAN_ID_UDS_REQ_B:
             Uds_HandleRequest(data, len);
             break;
-        case CAN_ID_B_FAN_TARGET_SPEED:
+        case CAN_ID_BCM_FANTARGET:
             val = (uint8_t)Com_ReceiveSignal(SID_B_FAN_TARGET);
             xQueueSend(xFanQueue, &val, pdMS_TO_TICKS(5));
             break;
-        case CAN_ID_B_WINDOW_TARGET_POS:
+        case CAN_ID_BCM_WINDOWTARGET:
             val = (uint8_t)Com_ReceiveSignal(SID_B_WINDOW_TARGET);
             xQueueSend(xWindowQueue, &val, pdMS_TO_TICKS(5));
             break;
-        case CAN_ID_B_BUZZER_CTRL:
+        case CAN_ID_BCM_BUZZERCMD:
             val = (uint8_t)Com_ReceiveSignal(SID_B_BUZZER_MODE);
             xQueueSend(xBuzzerQueue, &val, pdMS_TO_TICKS(5));
             break;
-        case CAN_ID_B_LED_CTRL:
+        case CAN_ID_BCM_LEDSTATECMD:
             val = (uint8_t)Com_ReceiveSignal(SID_B_LED_STATE);
             xQueueSend(xLEDQueue, &val, pdMS_TO_TICKS(5));
             break;

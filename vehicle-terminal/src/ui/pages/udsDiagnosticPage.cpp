@@ -85,8 +85,8 @@ void UdsDiagnosticPage::buildUI()
 
     // 目标节点选择（加到请求区布局的行尾）
     QComboBox *nodeCombo = new QComboBox(this);
-    nodeCombo->addItem("NodeA (0x7E0/0x7E8)", 0);
-    nodeCombo->addItem("NodeB (0x7E1/0x7E9)", 1);
+    nodeCombo->addItem("PCM (0x7E0/0x7E8)", 0);
+    nodeCombo->addItem("BCM (0x7E1/0x7E9)", 1);
     connect(nodeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [](int idx) {
         Dcm::instance()->setTargetNode(idx);
     });

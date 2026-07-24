@@ -20,7 +20,7 @@ public:
     Dcm &operator=(const Dcm &) = delete;
 
     // 选择目标节点（切换 CAN ID）
-    void setTargetNode(int nodeId);  // 0=NodeA (0x7E0/0x7E8), 1=NodeB (0x7E1/0x7E9)
+    void setTargetNode(int nodeId);  // 0=PCM (0x7E0/0x7E8), 1=BCM (0x7E1/0x7E9)
     int  targetNode() const { return m_targetNode; }
 
     // 由 PduR 调用（接收裸 UDS 帧）

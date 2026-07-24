@@ -140,7 +140,7 @@ private:
 ### UDS 诊断页
 `ToolsPage` 中 "CAN测试" 按钮打开 `udsDiagnosticPage`，提供：
 - 6 种 UDS 服务：会话控制 / 读DID / 读DTC / 清除DTC / ECU复位 / 保活
-- 节点选择器 (NodeA 0x7E0→0x7E8 / NodeB 0x7E1→0x7E9)
+- 节点选择器 (PCM 0x7E0→0x7E8 / BCM 0x7E1→0x7E9)
 - 实时状态栏：诊断会话 / MIL 故障灯 / 节点在线 / TEC/REC/负载
 - UDS 通信使用裸 CAN 帧（无 CanTp PCI 字节），与 STM32 端 [uds_handler.c](../stm32_can_node/Tasks/Src/uds_handler.c) 一致
 

@@ -228,7 +228,7 @@
         <string>font-weight:bold;</string>
        </property>
        <property name="text">
-        <string>NodeA: --</string>
+        <string>PCM: --</string>
        </property>
       </widget>
      </item>
@@ -238,7 +238,7 @@
         <string>font-weight:bold;</string>
        </property>
        <property name="text">
-        <string>NodeB: --</string>
+        <string>BCM: --</string>
        </property>
       </widget>
      </item>

@@ -1,5 +1,5 @@
 // Auto-generated from tools/can_signals.json
-// 2026-07-01 23:13:14
+// 2026-07-24 14:47:08
 
 #ifndef CAN_PROTOCOL_COMMON_H
 #define CAN_PROTOCOL_COMMON_H
@@ -17,25 +17,25 @@ extern "C" {
 #define CAN_BITRATE_HZ 250000
 #define CAN_HEARTBEAT_TIMEOUT_MS 3000
 
-#define CAN_ID_A_BUZZER_CTRL                     0x080
-#define CAN_ID_A_LED_CTRL                        0x081
+#define CAN_ID_PCM_BUZZERCMD                     0x080
+#define CAN_ID_PCM_LEDSTATECMD                   0x081
 
-#define CAN_ID_B_FAN_TARGET_SPEED                0x100
-#define CAN_ID_B_WINDOW_TARGET_POS               0x101
-#define CAN_ID_B_BUZZER_CTRL                     0x102
-#define CAN_ID_B_LED_CTRL                        0x103
+#define CAN_ID_BCM_FANTARGET                     0x100
+#define CAN_ID_BCM_WINDOWTARGET                  0x101
+#define CAN_ID_BCM_BUZZERCMD                     0x102
+#define CAN_ID_BCM_LEDSTATECMD                   0x103
 
-#define CAN_ID_A_ULTRASONIC                      0x180
-#define CAN_ID_A_GEAR                            0x181
-#define CAN_ID_A_FUEL                            0x182
-#define CAN_ID_A_RPM                             0x183
+#define CAN_ID_PCM_PARKINGDISTANCE               0x180
+#define CAN_ID_PCM_GEARPOSITION                  0x181
+#define CAN_ID_PCM_FUELLEVEL                     0x182
+#define CAN_ID_PCM_ENGINESPEED                   0x183
 
-#define CAN_ID_B_TEMPERATURE                     0x200
-#define CAN_ID_B_HUMIDITY                        0x201
-#define CAN_ID_B_FAN_SPEED_ACTUAL                0x202
-#define CAN_ID_B_WINDOW_POS_ACTUAL               0x203
+#define CAN_ID_BCM_CABINTEMPERATURE              0x200
+#define CAN_ID_BCM_CABINHUMIDITY                 0x201
+#define CAN_ID_BCM_FANACTUALSPEED                0x202
+#define CAN_ID_BCM_WINDOWACTUALPOS               0x203
 
-#define CAN_ID_DIAGNOSTIC                        0x300
+#define CAN_ID_ECU_DIAGREPORT                    0x300
 
 #define CAN_FLAG_VALID           0x01
 #define CAN_ROLLING_COUNTER_MASK  0xF0
@@ -56,21 +56,21 @@ extern "C" {
 #define CAN_LED_OFF      0x00
 #define CAN_LED_ALERT    0x03
 
-typedef struct __attribute__((packed)) { uint8_t Mode; } A_Buzzer_Ctrl_t;
-typedef struct __attribute__((packed)) { uint8_t State; } A_LED_Ctrl_t;
-typedef struct __attribute__((packed)) { uint8_t Target_Speed; } B_Fan_Target_Speed_t;
-typedef struct __attribute__((packed)) { uint8_t Target_Pos; } B_Window_Target_Pos_t;
-typedef struct __attribute__((packed)) { uint8_t Mode; } B_Buzzer_Ctrl_t;
-typedef struct __attribute__((packed)) { uint8_t State; } B_LED_Ctrl_t;
-typedef struct __attribute__((packed)) { uint8_t Flags; uint16_t Distance_cm; } A_Ultrasonic_t;
-typedef struct __attribute__((packed)) { uint8_t Flags; uint8_t Gear; } A_Gear_t;
-typedef struct __attribute__((packed)) { uint8_t Flags; uint16_t Fuel_Percent_x10; } A_Fuel_t;
-typedef struct __attribute__((packed)) { uint8_t Flags; uint16_t Rpm_Percent_x10; } A_Rpm_t;
-typedef struct __attribute__((packed)) { uint8_t Flags; int16_t Temperature_x10; } B_Temperature_t;
-typedef struct __attribute__((packed)) { uint8_t Flags; uint16_t Humidity_x10; } B_Humidity_t;
-typedef struct __attribute__((packed)) { uint8_t Flags; uint8_t Actual_Speed; } B_Fan_Speed_Actual_t;
-typedef struct __attribute__((packed)) { uint8_t Flags; uint8_t Actual_Pos; } B_Window_Pos_Actual_t;
-typedef struct __attribute__((packed)) { uint8_t Header; uint16_t TEC; uint16_t REC; uint16_t TX_Msg_Count; uint8_t Bus_Load; } Diagnostic_t;
+typedef struct __attribute__((packed)) { uint8_t BuzzerMode; } PCM_BuzzerCmd_t;
+typedef struct __attribute__((packed)) { uint8_t LED_State; } PCM_LEDStateCmd_t;
+typedef struct __attribute__((packed)) { uint8_t FanTargetSpeed; } BCM_FanTarget_t;
+typedef struct __attribute__((packed)) { uint8_t WindowTargetPos; } BCM_WindowTarget_t;
+typedef struct __attribute__((packed)) { uint8_t BuzzerMode; } BCM_BuzzerCmd_t;
+typedef struct __attribute__((packed)) { uint8_t LED_State; } BCM_LEDStateCmd_t;
+typedef struct __attribute__((packed)) { uint8_t UltrasonicFlags; uint16_t ParkingDistance; } PCM_ParkingDistance_t;
+typedef struct __attribute__((packed)) { uint8_t GearFlags; uint8_t GearPosition; } PCM_GearPosition_t;
+typedef struct __attribute__((packed)) { uint8_t FuelFlags; uint16_t FuelLevel; } PCM_FuelLevel_t;
+typedef struct __attribute__((packed)) { uint8_t RPM_Flags; uint16_t EngineSpeed; } PCM_EngineSpeed_t;
+typedef struct __attribute__((packed)) { uint8_t TempFlags; int16_t CabinTemperature; } BCM_CabinTemperature_t;
+typedef struct __attribute__((packed)) { uint8_t HumidFlags; uint16_t CabinHumidity; } BCM_CabinHumidity_t;
+typedef struct __attribute__((packed)) { uint8_t FanFlags; uint8_t FanActualSpeed; } BCM_FanActualSpeed_t;
+typedef struct __attribute__((packed)) { uint8_t WindowFlags; uint8_t WindowActualPos; } BCM_WindowActualPos_t;
+typedef struct __attribute__((packed)) { uint8_t DiagHeader; uint16_t TEC_Counter; uint16_t REC_Counter; uint16_t TX_MessageCount; uint8_t BusLoadPercent; } ECU_DiagReport_t;
 
 typedef struct { uint32_t id; uint8_t data[8]; uint8_t len; } CanRxMsg_t;
 
